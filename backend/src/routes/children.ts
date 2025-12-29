@@ -11,14 +11,14 @@ const createChildSchema = z.object({
   familyId: z.string().cuid(),
   name: z.string().min(1).max(50),
   avatar: z.string().max(10).default('🧒'),
-  birthYear: z.number().int().min(2000).max(2025).optional(),
+  birthYear: z.number().int().optional(),
   levelCategory: z.enum(['MAGIC', 'EXPLORERS', 'KNIGHTS', 'SPACE']).default('EXPLORERS'),
 });
 
 const updateChildSchema = z.object({
   name: z.string().min(1).max(50).optional(),
   avatar: z.string().max(10).optional(),
-  birthYear: z.number().int().min(2000).max(2025).optional().nullable(),
+  birthYear: z.number().int().optional().nullable(),
   levelCategory: z.enum(['MAGIC', 'EXPLORERS', 'KNIGHTS', 'SPACE']).optional(),
 });
 

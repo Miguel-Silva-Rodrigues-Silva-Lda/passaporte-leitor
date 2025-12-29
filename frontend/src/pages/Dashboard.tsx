@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useStore, useChildren, useSelectedChild, useFamilyId } from '../lib/store';
 import { statsApi, childrenApi } from '../lib/api';
-import { Button, Card, Modal, Input } from '../components/ui';
-import { AVATARS } from '../lib/types';
+import { Button, Card, Modal, Input, Select } from '../components/ui';
+import { AVATARS, BIRTH_YEARS } from '../lib/types';
 import { ChildCard } from '../components/ChildCard';
 import { AddBookModal } from '../components/AddBookModal';
 import { LogReadingModal } from '../components/LogReadingModal';
@@ -12,7 +12,7 @@ export default function Dashboard() {
   const familyId = useFamilyId();
   const children = useChildren();
   const selectedChild = useSelectedChild();
-  const { setSelectedChild, addChild, triggerConfetti } = useStore();
+  const { setSelectedChild, triggerConfetti } = useStore();
   const queryClient = useQueryClient();
 
   const [showAddBook, setShowAddBook] = useState(false);
@@ -128,8 +128,9 @@ export default function Dashboard() {
         isOpen={showAddChild}
         onClose={() => setShowAddChild(false)}
         familyId={familyId!}
-        onSuccess={(child) => {
-          addChild(child);
+        onSuccess={() => {
+          // Don't manually add child - let the query refetch with enriched data
+          queryClient.invalidateQueries({ queryKey: ['children', familyId] });
           queryClient.invalidateQueries({ queryKey: ['familyStats'] });
         }}
       />
@@ -174,6 +175,7 @@ function AddChildModal({
   onSuccess: (child: any) => void;
 }) {
   const [name, setName] = useState('');
+  const [birthYear, setBirthYear] = useState('');
   const [avatar, setAvatar] = useState('🧒');
 
   const createChildMutation = useMutation({
@@ -181,16 +183,18 @@ function AddChildModal({
   });
 
   const handleSubmit = async () => {
-    if (!name) return;
+    if (!name || !birthYear) return;
 
     try {
       const child = await createChildMutation.mutateAsync({
         familyId,
         name,
         avatar,
+        birthYear: parseInt(birthYear),
       });
       onSuccess(child);
       setName('');
+      setBirthYear('');
       setAvatar('🧒');
       onClose();
     } catch (err) {
@@ -204,8 +208,17 @@ function AddChildModal({
         label="Nome"
         value={name}
         onChange={(e) => setName(e.target.value)}
-        placeholder="Nome da criança"
+        placeholder="Nome do explorador"
         icon="👤"
+      />
+
+      <Select
+        label="Ano de nascimento"
+        value={birthYear}
+        onChange={(v) => setBirthYear(v)}
+        options={BIRTH_YEARS}
+        placeholder="Selecionar ano..."
+        icon="📅"
       />
 
       <div className="mb-4">
@@ -236,7 +249,7 @@ function AddChildModal({
         <Button
           variant="success"
           onClick={handleSubmit}
-          disabled={!name || createChildMutation.isPending}
+          disabled={!name || !birthYear || createChildMutation.isPending}
           className="flex-1"
         >
           {createChildMutation.isPending ? 'A criar...' : '✓ Adicionar Explorador'}

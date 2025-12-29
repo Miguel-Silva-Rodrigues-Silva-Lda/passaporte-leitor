@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button, Input, Select } from '../components/ui';
-import { AVATARS } from '../lib/types';
+import { AVATARS, BIRTH_YEARS } from '../lib/types';
 import { authApi } from '../lib/api';
 import { useStore } from '../lib/store';
 
@@ -143,12 +143,6 @@ const LoginScreen = ({ email, onBack, onLogin }: { email: string, onBack: () => 
     );
 };
 
-const currentYear = new Date().getFullYear();
-const BIRTH_YEARS = Array.from(
-    { length: 15 }, // 15 anos de opções
-    (_, i) => currentYear - 4 - i // Começar 4 anos atrás (excluir atual + 3 anteriores)
-);
-
 const RegisterScreen = ({ email, onBack, onRegister }: { email: string, onBack: () => void, onRegister: (data: any) => void }) => {
     const [step, setStep] = useState(1);
     const [familyName, setFamilyName] = useState('');
@@ -180,7 +174,7 @@ const RegisterScreen = ({ email, onBack, onRegister }: { email: string, onBack: 
         const newErrors: Record<string, string> = {};
 
         if (!childName) {
-            newErrors.childName = 'Nome da criança é obrigatório';
+            newErrors.childName = 'Nome do explorador é obrigatório';
         }
 
         if (!birthYear) {
@@ -298,7 +292,7 @@ const RegisterScreen = ({ email, onBack, onRegister }: { email: string, onBack: 
                     label="Nome"
                     value={childName}
                     onChange={(e) => { setChildName(e.target.value); setErrors({ ...errors, childName: '' }); }}
-                    placeholder="Nome da criança"
+                    placeholder="Nome do explorador"
                     icon="👤"
                     error={errors.childName}
                 />

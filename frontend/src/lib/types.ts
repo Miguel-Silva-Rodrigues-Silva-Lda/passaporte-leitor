@@ -281,3 +281,10 @@ export const AVATARS = [
   // Row 3 - Elfos + Animais
   '🧝', '🧝‍♀️', '🦊', '🐱', '🐼', '🦁', '🐸', '🦄',
 ];
+
+const currentYear = new Date().getFullYear();
+export const BIRTH_YEARS = Array.from(
+  { length: 99 }, // 99 anos de opções
+  (_, i) => currentYear - 4 - i // Começar 4 anos atrás
+);
+
