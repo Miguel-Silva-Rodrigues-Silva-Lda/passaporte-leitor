@@ -20,6 +20,14 @@ export type Genre =
 
 export type AchievementCategory = 'READING' | 'GENRE' | 'STREAK' | 'SPECIAL';
 
+export type BookStatus = 'to-read' | 'reading' | 'finished';
+
+export const BOOK_STATUS_CONFIG = {
+  'reading': { label: 'Estou a Ler', icon: '📖' },
+  'to-read': { label: 'Quero Ler', icon: '📋' },
+  'finished': { label: 'Terminado', icon: '✅' },
+} as const;
+
 // ============================================================================
 // MODELS
 // ============================================================================

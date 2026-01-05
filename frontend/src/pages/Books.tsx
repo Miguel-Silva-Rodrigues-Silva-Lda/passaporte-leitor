@@ -3,7 +3,7 @@ import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { booksApi, childrenApi, type ChildListItem } from '../lib/api';
 import { useFamilyId } from '../lib/store';
 import type { Book } from '../lib/types';
-import { GENRES } from '../lib/types';
+import { GENRES, BOOK_STATUS_CONFIG } from '../lib/types';
 import { Modal } from '../components/ui';
 import { ChildSelector } from '../components/ChildSelector';
 
@@ -26,10 +26,11 @@ const COLORS = {
   border: '#E8E0D5',
 };
 
+// Extend shared config with page-specific styling
 export const STATUS_CONFIG = {
-  'reading': { label: 'Estou a Ler', icon: '📖', color: COLORS.secondary, bgColor: `${COLORS.secondary}20` },
-  'to-read': { label: 'Quero Ler', icon: '📋', color: COLORS.textLight, bgColor: '#f3f4f6' },
-  'finished': { label: 'Terminado', icon: '✅', color: COLORS.success, bgColor: `${COLORS.success}20` },
+  'reading': { ...BOOK_STATUS_CONFIG.reading, color: COLORS.secondary, bgColor: `${COLORS.secondary}20` },
+  'to-read': { ...BOOK_STATUS_CONFIG['to-read'], color: COLORS.textLight, bgColor: '#f3f4f6' },
+  'finished': { ...BOOK_STATUS_CONFIG.finished, color: COLORS.success, bgColor: `${COLORS.success}20` },
 } as const;
 
 // ============================================================================
@@ -120,9 +121,9 @@ const SearchBar = ({ value, onChange }: SearchBarProps) => (
 const FilterTabs = ({ activeFilter, onChange, counts }: FilterTabsProps) => {
   const filters = [
     { id: 'all' as const, label: 'Todos', icon: '📚' },
-    { id: 'reading' as const, label: 'Estou a Ler', icon: '📖' },
-    { id: 'to-read' as const, label: 'Quero Ler', icon: '📋' },
-    { id: 'finished' as const, label: 'Terminados', icon: '✅' },
+    { id: 'reading' as const, label: STATUS_CONFIG.reading.label, icon: STATUS_CONFIG.reading.icon },
+    { id: 'to-read' as const, label: STATUS_CONFIG['to-read'].label, icon: STATUS_CONFIG['to-read'].icon },
+    { id: 'finished' as const, label: 'Terminados', icon: STATUS_CONFIG.finished.icon },
   ];
 
   return (

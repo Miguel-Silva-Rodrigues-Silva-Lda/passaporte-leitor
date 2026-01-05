@@ -4,6 +4,7 @@ import { AVATARS, LevelCategory } from '../lib/types';
 import { familyApi, childrenApi } from '../lib/api';
 import { useFamilyId } from '../lib/store';
 import { THEME_CONFIG } from '../lib/themeConfig';
+import { Button } from '../components/ui';
 
 
 // ============================================================================
@@ -33,28 +34,6 @@ const BIRTH_YEARS = Array.from({ length: 15 }, (_, i) => currentYear - 4 - i);
 // ============================================================================
 // COMPONENTS
 // ============================================================================
-
-const Button = ({ children, onClick, variant = 'primary', size = 'medium', fullWidth = false }: any) => {
-  const baseStyles = 'font-bold rounded-xl transition-all flex items-center justify-center gap-2';
-  const variants: Record<string, string> = {
-    primary: 'bg-orange-500 text-white hover:bg-orange-600',
-    secondary: 'bg-gray-100 text-gray-700 hover:bg-gray-200',
-    danger: 'bg-red-500 text-white hover:bg-red-600',
-  };
-  const sizes: Record<string, string> = {
-    small: 'px-4 py-2 text-sm',
-    medium: 'px-6 py-3',
-  };
-
-  return (
-    <button
-      onClick={onClick}
-      className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${fullWidth ? 'w-full' : ''}`}
-    >
-      {children}
-    </button>
-  );
-};
 
 const SectionHeader = ({ icon, title }: any) => (
   <div className="mb-4">
@@ -270,8 +249,8 @@ const FamilyForm = ({ family, onSave, onCancel }: any) => {
       </div>
 
       <div className="flex gap-3 mt-6">
-        <Button variant="secondary" onClick={onCancel} fullWidth>Cancelar</Button>
-        <Button onClick={handleSave} fullWidth>💾 Guardar</Button>
+        <Button variant="secondary" onClick={onCancel} className="flex-1">Cancelar</Button>
+        <Button onClick={handleSave} className="flex-1">💾 Guardar</Button>
       </div>
     </div>
   );
@@ -345,8 +324,8 @@ const ChildForm = ({ child, onSave, onCancel, onDelete }: any) => {
       <LevelCategorySelector selected={levelCategory} onChange={setLevelCategory} />
 
       <div className="flex gap-3 mt-6">
-        <Button variant="secondary" onClick={onCancel} fullWidth>Cancelar</Button>
-        <Button onClick={handleSave} fullWidth>💾 {isNew ? 'Criar' : 'Guardar'}</Button>
+        <Button variant="secondary" onClick={onCancel} className="flex-1">Cancelar</Button>
+        <Button onClick={handleSave} className="flex-1">💾 {isNew ? 'Criar' : 'Guardar'}</Button>
       </div>
 
       {!isNew && (
@@ -357,8 +336,8 @@ const ChildForm = ({ child, onSave, onCancel, onDelete }: any) => {
             <div className="bg-red-50 p-4 rounded-xl">
               <p className="text-sm text-red-700 mb-3 text-center">Tens a certeza?</p>
               <div className="flex gap-3">
-                <Button variant="secondary" onClick={() => setShowDeleteConfirm(false)} fullWidth size="small">Cancelar</Button>
-                <Button variant="danger" onClick={() => onDelete(child.id)} fullWidth size="small">Confirmar</Button>
+                <Button variant="secondary" onClick={() => setShowDeleteConfirm(false)} size="sm" className="flex-1">Cancelar</Button>
+                <Button variant="danger" onClick={() => onDelete(child.id)} size="sm" className="flex-1">Confirmar</Button>
               </div>
             </div>
           )}
@@ -505,7 +484,7 @@ export default function Settings() {
             <div>
               <div className="flex items-center justify-between mb-3">
                 <SectionHeader icon="👶" title="Exploradores" />
-                <Button size="small" onClick={() => { setEditingChild(null); setActiveView('child'); }}>➕ Adicionar</Button>
+                <Button size="sm" onClick={() => { setEditingChild(null); setActiveView('child'); }}>➕ Adicionar</Button>
               </div>
               {children.length === 0 ? (
                 <div className="bg-white rounded-xl p-8 text-center">

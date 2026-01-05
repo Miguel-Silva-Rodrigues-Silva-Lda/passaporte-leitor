@@ -3,6 +3,7 @@ import { serve } from '@hono/node-server';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
+import { secureHeaders } from 'hono/secure-headers';
 import { authMiddleware } from './middleware/auth.js';
 import { familyRoutes } from './routes/family.js';
 import { childRoutes } from './routes/children.js';
@@ -21,12 +22,39 @@ const app = new Hono();
 
 app.use('*', logger());
 
+// Security headers (CSP, X-Frame-Options, X-Content-Type-Options, etc.)
+app.use('*', secureHeaders({
+  xFrameOptions: 'DENY',
+  xContentTypeOptions: 'nosniff',
+  referrerPolicy: 'strict-origin-when-cross-origin',
+  strictTransportSecurity: 'max-age=31536000; includeSubDomains',
+  xXssProtection: '1; mode=block',
+}));
+
+// ============================================================================
+// HEALTH CHECK (before CORS - no origin header from Railway health checks)
+// ============================================================================
+
+app.get('/', (c) => {
+  return c.json({
+    name: 'Passaporte do Leitor API',
+    version: '1.0.0',
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+  });
+});
+
+app.get('/health', (c) => {
+  return c.json({ status: 'ok' });
+});
+
 // Validate CORS_ORIGIN is set
 if (!process.env.CORS_ORIGIN) {
   throw new Error('CORS_ORIGIN environment variable is required');
 }
 
-app.use('*', cors({
+// CORS (applied to /api routes only)
+app.use('/api/*', cors({
   origin: (origin) => {
     const allowedOrigins = process.env.CORS_ORIGIN!.split(',').map(o => o.trim());
 
@@ -45,23 +73,6 @@ app.use('*', cors({
   },
   credentials: true,
 }));
-
-// ============================================================================
-// HEALTH CHECK
-// ============================================================================
-
-app.get('/', (c) => {
-  return c.json({
-    name: 'Passaporte do Leitor API',
-    version: '1.0.0',
-    status: 'healthy',
-    timestamp: new Date().toISOString(),
-  });
-});
-
-app.get('/health', (c) => {
-  return c.json({ status: 'ok' });
-});
 
 // ============================================================================
 // API ROUTES
