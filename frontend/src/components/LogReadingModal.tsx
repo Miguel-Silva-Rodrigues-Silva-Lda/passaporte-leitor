@@ -427,11 +427,6 @@ const Step4FinishedBook = ({ data, onChange, onNext, onBack }: StepProps) => {
                 <div className="bg-gray-50 rounded-xl p-4 mb-6 text-center">
                     <p className="font-bold text-gray-800">{book.title}</p>
                     <p className="text-sm text-gray-500">{book.author}</p>
-                    {book.totalPages && data.pageEnd && (
-                        <p className="text-xs text-orange-500 mt-2">
-                            Página {data.pageEnd} de {book.totalPages} ({Math.round((data.pageEnd / book.totalPages) * 100)}%)
-                        </p>
-                    )}
                 </div>
             )}
 

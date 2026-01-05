@@ -84,7 +84,7 @@ export default function PrintPage() {
             <div className="text-4xl mb-3">{item.icon}</div>
             <h3 className="font-bold mb-1 text-gray-800">{item.name}</h3>
             <p className="text-sm text-gray-500 mb-4">{item.desc}</p>
-            <Button variant="primary" size="sm" className="w-full">
+            <Button variant="primary" size="sm" className="w-full" disabled={children.length === 0}>
               Pré-visualizar
             </Button>
           </Card>
