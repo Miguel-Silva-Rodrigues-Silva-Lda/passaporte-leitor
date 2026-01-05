@@ -3,6 +3,7 @@ import { BookStatus } from '@prisma/client';
 import prisma from '../lib/prisma.js';
 import { getGenreStats } from '../services/achievements.js';
 import { getCurrentLevel, getNextLevel, getLevelProgress, getBooksToNextLevel } from '../lib/levels-config.js';
+import { verifyFamilyParam, verifyChildOwnership } from '../middleware/authorization.js';
 
 export const statsRoutes = new Hono();
 
@@ -12,6 +13,11 @@ export const statsRoutes = new Hono();
 
 statsRoutes.get('/child/:childId', async (c) => {
   const { childId } = c.req.param();
+
+  // Authorization check: verify child belongs to authenticated family
+  if (!await verifyChildOwnership(c, childId)) {
+    return c.json({ error: 'Forbidden - Access denied' }, 403);
+  }
 
   // Obter criança
   const child = await prisma.child.findUnique({
@@ -125,6 +131,11 @@ statsRoutes.get('/child/:childId', async (c) => {
 statsRoutes.get('/family/:familyId', async (c) => {
   const { familyId } = c.req.param();
 
+  // Authorization check: verify family belongs to authenticated user
+  if (!verifyFamilyParam(c, familyId)) {
+    return c.json({ error: 'Forbidden - Access denied' }, 403);
+  }
+
   // Obter família com filhos e livros
   const family = await prisma.family.findUnique({
     where: { id: familyId },
@@ -226,6 +237,12 @@ statsRoutes.get('/family/:familyId', async (c) => {
 
 statsRoutes.get('/leaderboard/:familyId', async (c) => {
   const { familyId } = c.req.param();
+
+  // Authorization check: verify family belongs to authenticated user
+  if (!verifyFamilyParam(c, familyId)) {
+    return c.json({ error: 'Forbidden - Access denied' }, 403);
+  }
+
   const { period } = c.req.query(); // 'week', 'month', 'year', 'all'
 
   const children = await prisma.child.findMany({

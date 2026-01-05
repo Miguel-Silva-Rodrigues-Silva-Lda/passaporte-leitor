@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import prisma from '../lib/prisma.js';
 import { checkAndAwardAchievements } from '../services/achievements.js';
+import { verifyChildOwnership } from '../middleware/authorization.js';
 
 export const achievementRoutes = new Hono();
 
@@ -25,6 +26,11 @@ achievementRoutes.get('/', async (c) => {
 
 achievementRoutes.get('/child/:childId', async (c) => {
   const { childId } = c.req.param();
+
+  // Authorization check: verify child belongs to authenticated family
+  if (!await verifyChildOwnership(c, childId)) {
+    return c.json({ error: 'Forbidden - Access denied' }, 403);
+  }
 
   // Obter todas as conquistas
   const allAchievements = await prisma.achievement.findMany({
@@ -64,6 +70,11 @@ achievementRoutes.get('/child/:childId', async (c) => {
 
 achievementRoutes.post('/check/:childId', async (c) => {
   const { childId } = c.req.param();
+
+  // Authorization check: verify child belongs to authenticated family
+  if (!await verifyChildOwnership(c, childId)) {
+    return c.json({ error: 'Forbidden - Access denied' }, 403);
+  }
 
   const newAchievements = await checkAndAwardAchievements(childId);
 

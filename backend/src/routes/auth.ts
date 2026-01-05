@@ -87,7 +87,7 @@ app.post('/register', async (c) => {
             return { family, child: newChild };
         });
 
-        const token = jwt.sign({ familyId: result.family.id }, JWT_SECRET, { expiresIn: '30d' });
+        const token = jwt.sign({ familyId: result.family.id }, JWT_SECRET, { expiresIn: '7d' });
 
         return c.json({
             token,
@@ -124,7 +124,7 @@ app.post('/login', async (c) => {
             return c.json({ error: 'Invalid credentials' }, 401);
         }
 
-        const token = jwt.sign({ familyId: family.id }, JWT_SECRET, { expiresIn: '30d' });
+        const token = jwt.sign({ familyId: family.id }, JWT_SECRET, { expiresIn: '7d' });
 
         return c.json({
             token,

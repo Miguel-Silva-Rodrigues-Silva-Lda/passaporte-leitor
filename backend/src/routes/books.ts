@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { Genre, BookStatus } from '@prisma/client';
 import prisma from '../lib/prisma.js';
 import { checkAndAwardAchievements } from '../services/achievements.js';
+import { verifyFamilyParam, verifyChildOwnership, verifyBookOwnership } from '../middleware/authorization.js';
 
 export const bookRoutes = new Hono();
 
@@ -58,6 +59,11 @@ const updateBookSchema = z.object({
 
 bookRoutes.get('/family/:familyId', async (c) => {
   const { familyId } = c.req.param();
+
+  // Authorization check: verify family belongs to authenticated user
+  if (!verifyFamilyParam(c, familyId)) {
+    return c.json({ error: 'Forbidden - Access denied' }, 403);
+  }
 
   // Query parameters for filtering
   const status = c.req.query('status'); // 'reading', 'to-read', 'finished', or undefined for all
@@ -151,6 +157,11 @@ bookRoutes.get('/family/:familyId', async (c) => {
 bookRoutes.get('/child/:childId', async (c) => {
   const { childId } = c.req.param();
 
+  // Authorization check: verify child belongs to authenticated family
+  if (!await verifyChildOwnership(c, childId)) {
+    return c.json({ error: 'Forbidden - Access denied' }, 403);
+  }
+
   // Query parameters for filtering
   const genre = c.req.query('genre');
   const limit = c.req.query('limit');
@@ -219,6 +230,11 @@ bookRoutes.post('/', async (c) => {
 
   const data = validation.data;
 
+  // Authorization check: verify child belongs to authenticated family
+  if (!await verifyChildOwnership(c, data.childId)) {
+    return c.json({ error: 'Forbidden - Access denied' }, 403);
+  }
+
   // Verificar se a criança existe
   const child = await prisma.child.findUnique({ where: { id: data.childId } });
   if (!child) {
@@ -268,6 +284,12 @@ bookRoutes.post('/', async (c) => {
 
 bookRoutes.put('/:id', async (c) => {
   const { id } = c.req.param();
+
+  // Authorization check: verify book belongs to authenticated family
+  if (!await verifyBookOwnership(c, id)) {
+    return c.json({ error: 'Forbidden - Access denied' }, 403);
+  }
+
   const body = await c.req.json();
 
   const validation = updateBookSchema.safeParse(body);
@@ -303,6 +325,11 @@ bookRoutes.put('/:id', async (c) => {
 
 bookRoutes.delete('/:id', async (c) => {
   const { id } = c.req.param();
+
+  // Authorization check: verify book belongs to authenticated family
+  if (!await verifyBookOwnership(c, id)) {
+    return c.json({ error: 'Forbidden - Access denied' }, 403);
+  }
 
   await prisma.book.delete({
     where: { id },

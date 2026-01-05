@@ -24,10 +24,10 @@
   "devDependencies": {
     "@types/node": "^25.0.1",
     "concurrently": "^8.2.2",
-    "prisma": "^5.10.0"
+    "prisma": "^6.19.1"
   },
   "dependencies": {
-    "@prisma/client": "^5.10.0"
+    "@prisma/client": "^6.19.1"
   },
   "engines": {
     "node": ">=18.0.0"

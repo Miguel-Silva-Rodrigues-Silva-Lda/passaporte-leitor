@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { BookStatus } from '@prisma/client';
 import prisma from '../lib/prisma.js';
+import { verifyFamilyParam, verifyChildOwnership, verifySessionOwnership } from '../middleware/authorization.js';
 
 export const readingLogRoutes = new Hono();
 
@@ -42,6 +43,11 @@ readingLogRoutes.post('/', async (c) => {
     }
 
     const { childId, bookId, minutes, pageEnd, mood, finishedBook, date, rating, favoriteCharacter, notes } = validation.data;
+
+    // Authorization check: verify child belongs to authenticated family
+    if (!await verifyChildOwnership(c, childId)) {
+        return c.json({ error: 'Forbidden - Access denied' }, 403);
+    }
 
     // Verify child exists
     const child = await prisma.child.findUnique({ where: { id: childId } });
@@ -97,6 +103,12 @@ readingLogRoutes.post('/', async (c) => {
 
 readingLogRoutes.get('/stats/:familyId', async (c) => {
     const familyId = c.req.param('familyId');
+
+    // Authorization check: verify family belongs to authenticated user
+    if (!verifyFamilyParam(c, familyId)) {
+        return c.json({ error: 'Forbidden - Access denied' }, 403);
+    }
+
     const childId = c.req.query('childId');
     const search = c.req.query('search');
     const dateFrom = c.req.query('dateFrom');
@@ -148,6 +160,12 @@ readingLogRoutes.get('/stats/:familyId', async (c) => {
 
 readingLogRoutes.get('/family/:familyId', async (c) => {
     const familyId = c.req.param('familyId');
+
+    // Authorization check: verify family belongs to authenticated user
+    if (!verifyFamilyParam(c, familyId)) {
+        return c.json({ error: 'Forbidden - Access denied' }, 403);
+    }
+
     const childId = c.req.query('childId');
     const search = c.req.query('search');
     const dateFrom = c.req.query('dateFrom');
@@ -226,6 +244,12 @@ readingLogRoutes.get('/family/:familyId', async (c) => {
 
 readingLogRoutes.put('/:id', async (c) => {
     const id = c.req.param('id');
+
+    // Authorization check: verify session belongs to authenticated family
+    if (!await verifySessionOwnership(c, id)) {
+        return c.json({ error: 'Forbidden - Access denied' }, 403);
+    }
+
     const body = await c.req.json();
 
     const validation = updateSessionSchema.safeParse(body);
@@ -280,6 +304,11 @@ readingLogRoutes.put('/:id', async (c) => {
 
 readingLogRoutes.delete('/:id', async (c) => {
     const id = c.req.param('id');
+
+    // Authorization check: verify session belongs to authenticated family
+    if (!await verifySessionOwnership(c, id)) {
+        return c.json({ error: 'Forbidden - Access denied' }, 403);
+    }
 
     // Check if session exists
     const existing = await prisma.readingSession.findUnique({ where: { id } });

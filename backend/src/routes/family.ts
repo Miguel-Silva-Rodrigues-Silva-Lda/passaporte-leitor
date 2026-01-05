@@ -2,15 +2,11 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
 import prisma from '../lib/prisma.js';
+import { verifyFamilyParam } from '../middleware/authorization.js';
 
 export const familyRoutes = new Hono();
 
 // Schemas de validação
-const createFamilySchema = z.object({
-  name: z.string().min(1).max(100),
-  email: z.string().email().optional(),
-});
-
 const updateFamilySchema = z.object({
   name: z.string().min(1).max(100).optional(),
   currentPassword: z.string().optional(),
@@ -23,6 +19,11 @@ const updateFamilySchema = z.object({
 
 familyRoutes.get('/:id', async (c) => {
   const { id } = c.req.param();
+
+  // Authorization check: verify family belongs to authenticated user
+  if (!verifyFamilyParam(c, id)) {
+    return c.json({ error: 'Forbidden - Access denied' }, 403);
+  }
 
   const family = await prisma.family.findUnique({
     where: { id },
@@ -50,37 +51,8 @@ familyRoutes.get('/:id', async (c) => {
 // ============================================================================
 
 familyRoutes.post('/', async (c) => {
-  const body = await c.req.json();
-
-  const validation = createFamilySchema.safeParse(body);
-  if (!validation.success) {
-    return c.json({ error: 'Dados inválidos', details: validation.error.issues }, 400);
-  }
-
-  const { name, email } = validation.data;
-
-  // Verificar email único se fornecido
-  if (email) {
-    const existing = await prisma.family.findUnique({ where: { email } });
-    if (existing) {
-      return c.json({ error: 'Email já registado' }, 409);
-    }
-  }
-
-  const family = await prisma.family.create({
-    data: {
-      name,
-      email,
-      settings: {
-        create: {}, // Cria com defaults
-      },
-    },
-    include: {
-      settings: true,
-    },
-  });
-
-  return c.json(family, 201);
+  // This endpoint should not be used - families are created via /auth/register
+  return c.json({ error: 'Use /auth/register to create new families' }, 403);
 });
 
 // ============================================================================
@@ -89,6 +61,12 @@ familyRoutes.post('/', async (c) => {
 
 familyRoutes.put('/:id', async (c) => {
   const { id } = c.req.param();
+
+  // Authorization check: verify family belongs to authenticated user
+  if (!verifyFamilyParam(c, id)) {
+    return c.json({ error: 'Forbidden - Access denied' }, 403);
+  }
+
   const body = await c.req.json();
 
   const validation = updateFamilySchema.safeParse(body);
@@ -141,6 +119,11 @@ familyRoutes.put('/:id', async (c) => {
 familyRoutes.delete('/:id', async (c) => {
   const { id } = c.req.param();
 
+  // Authorization check: verify family belongs to authenticated user
+  if (!verifyFamilyParam(c, id)) {
+    return c.json({ error: 'Forbidden - Access denied' }, 403);
+  }
+
   await prisma.family.delete({
     where: { id },
   });
@@ -154,6 +137,11 @@ familyRoutes.delete('/:id', async (c) => {
 
 familyRoutes.get('/:id/full', async (c) => {
   const { id } = c.req.param();
+
+  // Authorization check: verify family belongs to authenticated user
+  if (!verifyFamilyParam(c, id)) {
+    return c.json({ error: 'Forbidden - Access denied' }, 403);
+  }
 
   const family = await prisma.family.findUnique({
     where: { id },

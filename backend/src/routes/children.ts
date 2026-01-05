@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { BookStatus } from '@prisma/client';
 import prisma from '../lib/prisma.js';
 import { getCurrentLevel, getNextLevel, getLevelProgress, getBooksToNextLevel } from '../lib/levels-config.js';
+import { verifyFamilyParam, verifyChildOwnership } from '../middleware/authorization.js';
 
 export const childRoutes = new Hono();
 
@@ -28,6 +29,11 @@ const updateChildSchema = z.object({
 
 childRoutes.get('/:id', async (c) => {
   const { id } = c.req.param();
+
+  // Authorization check: verify child belongs to authenticated family
+  if (!await verifyChildOwnership(c, id)) {
+    return c.json({ error: 'Forbidden - Access denied' }, 403);
+  }
 
   const child = await prisma.child.findUnique({
     where: { id },
@@ -68,6 +74,12 @@ childRoutes.get('/:id', async (c) => {
 
 childRoutes.get('/family/:familyId', async (c) => {
   const { familyId } = c.req.param();
+
+  // Authorization check: verify family belongs to authenticated user
+  if (!verifyFamilyParam(c, familyId)) {
+    return c.json({ error: 'Forbidden - Access denied' }, 403);
+  }
+
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -243,6 +255,11 @@ childRoutes.post('/', async (c) => {
 
   const { familyId, name, avatar, birthYear, levelCategory } = validation.data;
 
+  // Authorization check: verify familyId matches authenticated user
+  if (!verifyFamilyParam(c, familyId)) {
+    return c.json({ error: 'Forbidden - Access denied' }, 403);
+  }
+
   // Verificar se a família existe
   const family = await prisma.family.findUnique({ where: { id: familyId } });
   if (!family) {
@@ -273,6 +290,12 @@ childRoutes.post('/', async (c) => {
 
 childRoutes.put('/:id', async (c) => {
   const { id } = c.req.param();
+
+  // Authorization check: verify child belongs to authenticated family
+  if (!await verifyChildOwnership(c, id)) {
+    return c.json({ error: 'Forbidden - Access denied' }, 403);
+  }
+
   const body = await c.req.json();
 
   const validation = updateChildSchema.safeParse(body);
@@ -299,6 +322,11 @@ childRoutes.put('/:id', async (c) => {
 
 childRoutes.delete('/:id', async (c) => {
   const { id } = c.req.param();
+
+  // Authorization check: verify child belongs to authenticated family
+  if (!await verifyChildOwnership(c, id)) {
+    return c.json({ error: 'Forbidden - Access denied' }, 403);
+  }
 
   await prisma.child.delete({
     where: { id },

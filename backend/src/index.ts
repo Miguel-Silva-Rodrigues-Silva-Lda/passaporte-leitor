@@ -30,12 +30,18 @@ app.use('*', cors({
   origin: (origin) => {
     const allowedOrigins = process.env.CORS_ORIGIN!.split(',').map(o => o.trim());
 
-    // If no origin (like Postman) or origin is in allowed list, allow it
-    if (!origin || allowedOrigins.some(allowed => origin.includes(allowed))) {
-      return origin || allowedOrigins[0];
+    // No origin (server-to-server, Postman) - allow in development only
+    if (!origin) {
+      return process.env.NODE_ENV === 'development' ? allowedOrigins[0] : null;
     }
 
-    return allowedOrigins[0]; // Default fallback
+    // Check if origin is in the allowed list
+    if (allowedOrigins.some(allowed => origin.includes(allowed))) {
+      return origin;
+    }
+
+    // Reject unauthorized origins
+    return null;
   },
   credentials: true,
 }));
