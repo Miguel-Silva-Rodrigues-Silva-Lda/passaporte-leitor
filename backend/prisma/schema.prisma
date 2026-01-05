@@ -91,6 +91,7 @@ model Child {
   readingSessions  ReadingSession[]
   achievements     ChildAchievement[]
 
+  @@index([familyId])
   @@map("children")
 }
 
@@ -125,6 +126,8 @@ model Book {
 
   @@index([childId])
   @@index([genre])
+  @@index([childId, status])
+  @@index([childId, genre])
   @@map("books")
 }
 

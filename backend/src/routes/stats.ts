@@ -1,5 +1,4 @@
 import { Hono } from 'hono';
-import { BookStatus } from '@prisma/client';
 import prisma from '../lib/prisma.js';
 import { getGenreStats } from '../services/achievements.js';
 import { getCurrentLevel, getNextLevel, getLevelProgress, getBooksToNextLevel } from '../lib/levels-config.js';
@@ -161,27 +160,8 @@ statsRoutes.get('/family/:familyId', async (c) => {
   );
   const totalBooks = allBooks.length;
 
-  // Livros por mês (últimos 6 meses)
-  const monthlyStats: { month: string; count: number }[] = [];
-  for (let i = 5; i >= 0; i--) {
-    const date = new Date();
-    date.setMonth(date.getMonth() - i);
-    const monthBooks = allBooks.filter((b: any) => {
-      if (!b.finishDate) return false;
-      const d = new Date(b.finishDate);
-      return d.getMonth() === date.getMonth() && d.getFullYear() === date.getFullYear();
-    });
-    monthlyStats.push({
-      month: date.toLocaleDateString('pt-PT', { month: 'short', year: 'numeric' }),
-      count: monthBooks.length,
-    });
-  }
-
-  // Géneros agregados
-  const genreCounts: Record<string, number> = {};
-  for (const book of allBooks) {
-    genreCounts[book.genre] = (genreCounts[book.genre] || 0) + 1;
-  }
+  // Count unique genres discovered
+  const uniqueGenres = new Set(allBooks.map((book) => book.genre));
 
   // Estatísticas por criança
   const childStats = family.children.map((child) => {
@@ -220,13 +200,8 @@ statsRoutes.get('/family/:familyId', async (c) => {
       children: family.children.length,
       books: totalBooks,
       achievements: family.children.reduce((sum, c) => sum + c.achievements.length, 0),
-      genresDiscovered: Object.keys(genreCounts).length,
+      genresDiscovered: uniqueGenres.size,
     },
-    monthlyStats,
-    genreStats: Object.entries(genreCounts).map(([genre, count]) => ({
-      genre,
-      count,
-    })),
     childStats,
   });
 });

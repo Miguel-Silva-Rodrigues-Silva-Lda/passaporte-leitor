@@ -48,15 +48,18 @@ app.get('/health', (c) => {
   return c.json({ status: 'ok' });
 });
 
-// Validate CORS_ORIGIN is set
+// Validate CORS_ORIGIN is set (warn but don't crash to allow health checks)
 if (!process.env.CORS_ORIGIN) {
-  throw new Error('CORS_ORIGIN environment variable is required');
+  console.warn('⚠️  CORS_ORIGIN environment variable is not set. API routes will reject all origins.');
 }
 
 // CORS (applied to /api routes only)
 app.use('/api/*', cors({
   origin: (origin) => {
-    const allowedOrigins = process.env.CORS_ORIGIN!.split(',').map(o => o.trim());
+    if (!process.env.CORS_ORIGIN) {
+      return null; // Reject all if not configured
+    }
+    const allowedOrigins = process.env.CORS_ORIGIN.split(',').map(o => o.trim());
 
     // No origin (server-to-server, Postman) - allow in development only
     if (!origin) {
