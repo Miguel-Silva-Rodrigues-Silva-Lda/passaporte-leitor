@@ -80,15 +80,15 @@ interface LogReadingModalProps {
 // DATE SELECTOR
 // ============================================================================
 
-const DateSelector = ({ value, onChange }: { value: string; onChange: (date: string) => void }) => {
+const DateSelector = ({ value, onChange, minDate }: { value: string; onChange: (date: string) => void; minDate?: string }) => {
     const today = new Date().toISOString().split('T')[0];
 
-    // Generate last 7 days
+    // Generate last 3 days, but only include those >= minDate
     const recentDays = Array.from({ length: 3 }, (_, i) => ({
         date: getDaysAgo(i),
         label: i === 0 ? 'Hoje' : i === 1 ? 'Ontem' : formatDate(getDaysAgo(i)),
         isToday: i === 0,
-    }));
+    })).filter(day => !minDate || day.date >= minDate);
 
     const [showCustomDate, setShowCustomDate] = useState(false);
     const isRecentDay = recentDays.some(d => d.date === value);
@@ -100,8 +100,8 @@ const DateSelector = ({ value, onChange }: { value: string; onChange: (date: str
             </label>
 
             {/* Recent days grid */}
-            <div className="grid grid-cols-4 gap-2 mb-3">
-                {recentDays.slice(0, 3).map((day) => (
+            <div className={`grid gap-2 mb-3`} style={{ gridTemplateColumns: `repeat(${Math.min(recentDays.length + 1, 4)}, 1fr)` }}>
+                {recentDays.map((day) => (
                     <button
                         key={day.date}
                         onClick={() => {
@@ -133,13 +133,14 @@ const DateSelector = ({ value, onChange }: { value: string; onChange: (date: str
                     <input
                         type="date"
                         value={value}
+                        min={minDate}
                         max={today}
                         onChange={(e) => onChange(e.target.value)}
                         className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-orange-400 focus:outline-none"
                         style={{ color: COLORS.text }}
                     />
                     <p className="text-xs text-gray-400 mt-2 text-center">
-                        Só podes registar leitura até hoje
+                        {minDate ? `Desde ${new Date(minDate).toLocaleDateString('pt-PT')} até hoje` : 'Só podes registar leitura até hoje'}
                     </p>
                 </div>
             )}
@@ -323,6 +324,8 @@ const Step1SelectBook = ({ data, onChange, onNext, onCancel, currentBooks }: Ste
 // Step 2: Select Date
 const Step2SelectDate = ({ data, onChange, onNext, onBack }: StepProps) => {
     const book = data.selectedBook;
+    // Get startDate from book and format it for the date input
+    const bookStartDate = book?.startDate ? new Date(book.startDate).toISOString().split('T')[0] : undefined;
 
     return (
         <div className="space-y-6">
@@ -346,6 +349,7 @@ const Step2SelectDate = ({ data, onChange, onNext, onBack }: StepProps) => {
             <DateSelector
                 value={data.date || new Date().toISOString().split('T')[0]}
                 onChange={(date) => onChange({ ...data, date })}
+                minDate={bookStartDate}
             />
 
             <div className="flex gap-3 pt-4">

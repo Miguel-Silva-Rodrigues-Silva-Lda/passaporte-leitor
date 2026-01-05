@@ -10,7 +10,7 @@ import Dashboard from './pages/Dashboard';
 import Books from './pages/Books';
 import ReadingSessions from './pages/ReadingSessions';
 import MapPage from './pages/Map';
-// import AchievementsPage from './pages/Achievements';
+import AchievementsPage from './pages/Achievements';
 import PrintPage from './pages/Print';
 import Settings from './pages/Settings';
 
@@ -110,7 +110,7 @@ export default function App() {
           <Route path="/livros" element={<Books />} />
           <Route path="/leituras" element={<ReadingSessions />} />
           <Route path="/mapa" element={<MapPage />} />
-          {/* <Route path="/conquistas" element={<AchievementsPage />} /> */}
+          <Route path="/conquistas" element={<AchievementsPage />} />
           <Route path="/imprimir" element={<PrintPage />} />
           <Route path="/definicoes" element={<Settings />} />
         </Route>

@@ -308,6 +308,26 @@ mapRoutes.get('/family/:familyId', async (c) => {
         })
     );
 
+    // Handle empty children case
+    if (childrenStats.length === 0) {
+        return c.json({
+            family: {
+                id: family.id,
+                name: family.name,
+            },
+            children: [],
+            aggregated: {
+                rank: 1,
+                todayMinutes: 0,
+                dailyGoal: DEFAULT_DAILY_GOAL_MINUTES,
+                totalReadingDays: 0,
+                streak: 0,
+                totalHours: 0,
+                levelCategory: 'EXPLORERS',
+            },
+        });
+    }
+
     // Aggregate stats
     // Find most common levelCategory for family view
     const categoryCount: Record<string, number> = {};

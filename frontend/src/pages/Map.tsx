@@ -655,6 +655,20 @@ const ConstellationMap = ({
 // ============================================================================
 
 const FamilyAquarium = ({ children }: { children: ChildData[] }) => {
+  if (children.length === 0) {
+    return (
+      <LivingAquarium
+        rank={1}
+        todayMinutes={0}
+        dailyGoal={15}
+        totalReadingDays={0}
+        streak={0}
+        totalHours={0}
+        isFamily={true}
+      />
+    );
+  }
+
   const totalTodayMinutes = children.reduce((sum: number, c: ChildData) => sum + c.todayMinutes, 0);
   const avgDailyGoal = Math.round(children.reduce((sum: number, c: ChildData) => sum + c.dailyGoal, 0) / children.length);
   const totalReadingDays = children.reduce((sum: number, c: ChildData) => sum + c.totalReadingDays, 0);
@@ -680,6 +694,20 @@ const FamilyAquarium = ({ children }: { children: ChildData[] }) => {
 };
 
 const FamilyConstellation = ({ children }: { children: ChildData[] }) => {
+  if (children.length === 0) {
+    return (
+      <ConstellationMap
+        rank={1}
+        todayMinutes={0}
+        dailyGoal={15}
+        totalReadingDays={0}
+        streak={0}
+        totalHours={0}
+        isFamily={true}
+      />
+    );
+  }
+
   const totalTodayMinutes = children.reduce((sum: number, c: ChildData) => sum + c.todayMinutes, 0);
   const avgDailyGoal = Math.round(children.reduce((sum: number, c: ChildData) => sum + c.dailyGoal, 0) / children.length);
   const totalReadingDays = children.reduce((sum: number, c: ChildData) => sum + c.totalReadingDays, 0);
@@ -859,6 +887,15 @@ export default function ExplorerMapPage() {
 
         {/* Legend */}
         <MapLegend variant={mapType} />
+
+        {/* Empty state when no children */}
+        {children.length === 0 && (
+          <div className="mt-4 bg-white rounded-xl p-6 text-center">
+            <span className="text-4xl block mb-3">👶</span>
+            <p className="font-bold" style={{ color: COLORS.text }}>Nenhum explorador</p>
+            <p className="text-sm text-gray-500 mt-1">Adiciona um explorador nas definições para começar a aventura!</p>
+          </div>
+        )}
 
         {/* Individual child cards (when showing all) */}
         {selectedChildId === 'all' && children.length > 0 && (

@@ -146,6 +146,9 @@ const FamilyForm = ({ family, onSave, onCancel }: any) => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPasswordSection, setShowPasswordSection] = useState(false);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState<any>({});
 
   const handleSave = () => {
@@ -204,35 +207,62 @@ const FamilyForm = ({ family, onSave, onCancel }: any) => {
           <div className="mt-4 space-y-4 p-4 bg-gray-50 rounded-xl">
             <div className="mb-4">
               <label className="block text-sm font-medium mb-2" style={{ color: COLORS.text }}>Palavra-passe atual</label>
-              <input
-                type="password"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                className={`w-full px-4 py-3 rounded-xl border-2 ${errors.currentPassword ? 'border-red-400' : 'border-gray-200'} focus:outline-none`}
-              />
+              <div className="relative">
+                <input
+                  type={showCurrentPassword ? 'text' : 'password'}
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  className={`w-full px-4 py-3 pr-12 rounded-xl border-2 ${errors.currentPassword ? 'border-red-400' : 'border-gray-200'} focus:outline-none`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  {showCurrentPassword ? '🙈' : '👁️'}
+                </button>
+              </div>
               {errors.currentPassword && <p className="text-red-500 text-xs mt-1">{errors.currentPassword}</p>}
             </div>
 
             <div className="mb-4">
               <label className="block text-sm font-medium mb-2" style={{ color: COLORS.text }}>Nova palavra-passe</label>
-              <input
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                className={`w-full px-4 py-3 rounded-xl border-2 ${errors.newPassword ? 'border-red-400' : 'border-gray-200'} focus:outline-none`}
-              />
+              <div className="relative">
+                <input
+                  type={showNewPassword ? 'text' : 'password'}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className={`w-full px-4 py-3 pr-12 rounded-xl border-2 ${errors.newPassword ? 'border-red-400' : 'border-gray-200'} focus:outline-none`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  {showNewPassword ? '🙈' : '👁️'}
+                </button>
+              </div>
               {errors.newPassword && <p className="text-red-500 text-xs mt-1">{errors.newPassword}</p>}
               <p className="text-xs text-gray-400 mt-1">Mínimo 6 caracteres</p>
             </div>
 
             <div className="mb-4">
               <label className="block text-sm font-medium mb-2" style={{ color: COLORS.text }}>Confirmar nova palavra-passe</label>
-              <input
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className={`w-full px-4 py-3 rounded-xl border-2 ${errors.confirmPassword ? 'border-red-400' : 'border-gray-200'} focus:outline-none`}
-              />
+              <div className="relative">
+                <input
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className={`w-full px-4 py-3 pr-12 rounded-xl border-2 ${errors.confirmPassword ? 'border-red-400' : 'border-gray-200'} focus:outline-none`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  {showConfirmPassword ? '🙈' : '👁️'}
+                </button>
+              </div>
               {errors.confirmPassword && <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>}
             </div>
           </div>
@@ -367,6 +397,13 @@ export default function Settings() {
       queryClient.invalidateQueries({ queryKey: ['family', familyId] });
       showToast('Família atualizada!');
       setActiveView('list');
+    },
+    onError: (error: any) => {
+      if (error.message === 'Palavra-passe atual incorreta') {
+        showToast('Palavra-passe atual incorreta', 'warning');
+      } else {
+        showToast('Erro ao atualizar família', 'warning');
+      }
     },
   });
 

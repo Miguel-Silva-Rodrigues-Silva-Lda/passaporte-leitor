@@ -68,6 +68,10 @@ export function ExplorerForm({
           ))}
         </div>
       </div>
+
+      <p className="text-xs text-gray-500 text-center">
+        Podes mudar o tema da aventura nas definições
+      </p>
     </>
   );
 }

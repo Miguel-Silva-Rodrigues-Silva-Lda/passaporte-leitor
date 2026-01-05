@@ -63,9 +63,18 @@ const Step1BookInfo = ({ data, onChange, onNext, onCancel }: any) => {
                     label="Número de páginas (opcional)"
                     type="number"
                     value={data.totalPages || ''}
-                    onChange={(e) => onChange({ ...data, totalPages: parseInt(e.target.value) || undefined })}
+                    onChange={(e) => {
+                        const value = parseInt(e.target.value);
+                        if (e.target.value === '' || isNaN(value)) {
+                            onChange({ ...data, totalPages: undefined });
+                        } else {
+                            onChange({ ...data, totalPages: Math.min(Math.max(value, 1), 9999) });
+                        }
+                    }}
                     placeholder="Ex: 250"
                     icon="📄"
+                    min={1}
+                    max={9999}
                 />
                 <p className="text-xs text-gray-400 mt-1">Ajuda a acompanhar o progresso</p>
             </div>
@@ -102,7 +111,7 @@ const Step2ReadingStatus = ({ data, onChange, onNext, onBack }: any) => {
             {/* Status selection - Only 2 buttons */}
             <div className="grid grid-cols-2 gap-3 mb-6">
                 <button
-                    onClick={() => onChange({ ...data, status: 'reading' })}
+                    onClick={() => onChange({ ...data, status: 'reading', finishDate: undefined })}
                     type="button"
                     className={`p-4 rounded-xl text-center transition-all ${data.status === 'reading'
                         ? 'bg-orange-100 ring-2 ring-orange-500'
@@ -114,7 +123,7 @@ const Step2ReadingStatus = ({ data, onChange, onNext, onBack }: any) => {
                 </button>
 
                 <button
-                    onClick={() => onChange({ ...data, status: 'finished' })}
+                    onClick={() => onChange({ ...data, status: 'finished', currentPage: undefined })}
                     type="button"
                     className={`p-4 rounded-xl text-center transition-all ${data.status === 'finished'
                         ? 'bg-green-100 ring-2 ring-green-500'
@@ -157,7 +166,7 @@ const Step2ReadingStatus = ({ data, onChange, onNext, onBack }: any) => {
                                 style={{ color: COLORS.text }}
                                 value={data.finishDate || new Date().toISOString().split('T')[0]}
                                 onChange={(e) => onChange({ ...data, finishDate: e.target.value })}
-                                min={new Date(new Date().setFullYear(new Date().getFullYear() - 4)).toISOString().split('T')[0]}
+                                min={data.startDate || new Date(new Date().setFullYear(new Date().getFullYear() - 4)).toISOString().split('T')[0]}
                                 max={new Date().toISOString().split('T')[0]}
                             />
                         </div>
@@ -175,8 +184,18 @@ const Step2ReadingStatus = ({ data, onChange, onNext, onBack }: any) => {
                                 className="w-full px-4 py-2 rounded-xl border-2 border-gray-200 focus:border-orange-400 focus:outline-none text-lg"
                                 style={{ color: COLORS.text }}
                                 value={data.currentPage || ''}
-                                onChange={(e) => onChange({ ...data, currentPage: parseInt(e.target.value) || undefined })}
+                                onChange={(e) => {
+                                    const value = parseInt(e.target.value);
+                                    if (e.target.value === '' || isNaN(value)) {
+                                        onChange({ ...data, currentPage: undefined });
+                                    } else {
+                                        const maxPage = data.totalPages || 9999;
+                                        onChange({ ...data, currentPage: Math.min(Math.max(value, 1), maxPage) });
+                                    }
+                                }}
                                 placeholder="Ex: 50"
+                                min={1}
+                                max={data.totalPages || 9999}
                             />
                         </div>
                     )}
