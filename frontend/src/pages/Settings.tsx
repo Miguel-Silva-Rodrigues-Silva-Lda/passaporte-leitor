@@ -386,8 +386,8 @@ export default function Settings() {
   });
 
   const { data: children = [] } = useQuery({
-    queryKey: ['children', familyId],
-    queryFn: () => childrenApi.getByFamily(familyId!),
+    queryKey: ['children-list', familyId],
+    queryFn: () => childrenApi.getList(familyId!),
     enabled: !!familyId,
   });
 
@@ -410,6 +410,7 @@ export default function Settings() {
   const updateChildMutation = useMutation({
     mutationFn: ({ id, ...data }: any) => childrenApi.update(id, data),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['children-list', familyId] });
       queryClient.invalidateQueries({ queryKey: ['children', familyId] });
       showToast('Explorador atualizado!');
       setActiveView('list');
@@ -419,6 +420,7 @@ export default function Settings() {
   const createChildMutation = useMutation({
     mutationFn: (data: any) => childrenApi.create({ ...data, familyId: familyId! }),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['children-list', familyId] });
       queryClient.invalidateQueries({ queryKey: ['children', familyId] });
       showToast('Explorador adicionado!');
       setActiveView('list');
@@ -428,6 +430,7 @@ export default function Settings() {
   const deleteChildMutation = useMutation({
     mutationFn: (id: string) => childrenApi.delete(id),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['children-list', familyId] });
       queryClient.invalidateQueries({ queryKey: ['children', familyId] });
       queryClient.invalidateQueries({ queryKey: ['familyStats', familyId] });
       showToast('Explorador removido', 'warning');

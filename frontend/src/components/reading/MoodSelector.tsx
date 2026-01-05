@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { COLORS, MOODS } from './constants';
 
 interface MoodSelectorProps {
@@ -5,7 +6,7 @@ interface MoodSelectorProps {
     onChange: (mood: number) => void;
 }
 
-export const MoodSelector = ({ value, onChange }: MoodSelectorProps) => (
+export const MoodSelector = memo(({ value, onChange }: MoodSelectorProps) => (
     <div className="mb-4">
         <label className="flex items-center gap-1 text-sm font-medium mb-3" style={{ color: COLORS.text }}>
             😊 Como te sentiste com a leitura?
@@ -26,4 +27,4 @@ export const MoodSelector = ({ value, onChange }: MoodSelectorProps) => (
             ))}
         </div>
     </div>
-);
+));

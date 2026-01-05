@@ -562,10 +562,10 @@ export default function ReadingSessions() {
         limit: itemsPerPage,
     }), [selectedChild, searchQuery, dateFrom, dateTo, currentPage]);
 
-    // Fetch children
+    // Fetch children (lightweight list for filter dropdown)
     const { data: children = [] } = useQuery({
-        queryKey: ['children', familyId],
-        queryFn: () => childrenApi.getByFamily(familyId!),
+        queryKey: ['children-list', familyId],
+        queryFn: () => childrenApi.getList(familyId!),
         enabled: !!familyId,
     });
 

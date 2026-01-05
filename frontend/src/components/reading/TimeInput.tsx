@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { MinutesInput } from './MinutesInput';
 import { COLORS } from './constants';
 
@@ -7,7 +8,7 @@ interface TimeInputProps {
     dailyGoal?: number;
 }
 
-export const TimeInput = ({ value, onChange, dailyGoal = 15 }: TimeInputProps) => {
+export const TimeInput = memo(({ value, onChange, dailyGoal = 15 }: TimeInputProps) => {
     const goalReached = value >= dailyGoal;
 
     return (
@@ -41,4 +42,4 @@ export const TimeInput = ({ value, onChange, dailyGoal = 15 }: TimeInputProps) =
             </div>
         </div>
     );
-};
+});

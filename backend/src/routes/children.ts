@@ -242,6 +242,32 @@ childRoutes.get('/family/:familyId', async (c) => {
 });
 
 // ============================================================================
+// GET /api/children/family/:familyId/list - Lightweight list (no books/sessions)
+// ============================================================================
+
+childRoutes.get('/family/:familyId/list', async (c) => {
+  const { familyId } = c.req.param();
+
+  if (!verifyFamilyParam(c, familyId)) {
+    return c.json({ error: 'Forbidden - Access denied' }, 403);
+  }
+
+  const children = await prisma.child.findMany({
+    where: { familyId },
+    select: {
+      id: true,
+      name: true,
+      avatar: true,
+      birthYear: true,
+      levelCategory: true,
+    },
+    orderBy: { createdAt: 'asc' },
+  });
+
+  return c.json(children);
+});
+
+// ============================================================================
 // POST /api/children - Criar nova criança
 // ============================================================================
 

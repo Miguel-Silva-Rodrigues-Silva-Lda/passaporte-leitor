@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, memo } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { Modal, Button } from '../components/ui';
 import clsx from 'clsx';
@@ -80,7 +80,7 @@ interface LogReadingModalProps {
 // DATE SELECTOR
 // ============================================================================
 
-const DateSelector = ({ value, onChange, minDate }: { value: string; onChange: (date: string) => void; minDate?: string }) => {
+const DateSelector = memo(({ value, onChange, minDate }: { value: string; onChange: (date: string) => void; minDate?: string }) => {
     const today = new Date().toISOString().split('T')[0];
 
     // Generate last 3 days, but only include those >= minDate
@@ -146,13 +146,13 @@ const DateSelector = ({ value, onChange, minDate }: { value: string; onChange: (
             )}
         </div>
     );
-};
+});
 
 // ============================================================================
 // PAGE UPDATE INPUT
 // ============================================================================
 
-const PageUpdateInput = ({ currentPage, totalPages, newPage, onChange }: { currentPage?: number; totalPages?: number; newPage: number; onChange: (page: number) => void }) => {
+const PageUpdateInput = memo(({ currentPage, totalPages, newPage, onChange }: { currentPage?: number; totalPages?: number; newPage: number; onChange: (page: number) => void }) => {
     const progress = totalPages ? Math.round((newPage / totalPages) * 100) : 0;
 
     return (
@@ -205,15 +205,13 @@ const PageUpdateInput = ({ currentPage, totalPages, newPage, onChange }: { curre
             </div>
         </div>
     );
-};
-
-
+});
 
 // ============================================================================
 // STEP INDICATOR
 // ============================================================================
 
-const StepIndicator = ({ currentStep, totalSteps, labels }: { currentStep: number; totalSteps: number; labels: string[] }) => (
+const StepIndicator = memo(({ currentStep, totalSteps, labels }: { currentStep: number; totalSteps: number; labels: string[] }) => (
     <div className="flex items-center justify-center gap-2 mb-6">
         {Array.from({ length: totalSteps }).map((_, i) => (
             <React.Fragment key={i}>
@@ -240,7 +238,7 @@ const StepIndicator = ({ currentStep, totalSteps, labels }: { currentStep: numbe
             </React.Fragment>
         ))}
     </div>
-);
+));
 
 // ============================================================================
 // STEP COMPONENTS
@@ -627,7 +625,6 @@ export function LogReadingModal({ isOpen, onClose, child, currentBooks, onSucces
                 throw new Error('Missing required data');
             }
 
-
             return readingLogsApi.create({
                 childId: child.id,
                 bookId: sessionData.bookId,
@@ -636,7 +633,6 @@ export function LogReadingModal({ isOpen, onClose, child, currentBooks, onSucces
                 mood: sessionData.mood,
                 finishedBook: sessionData.finishedBook || false,
                 date: sessionData.date,
-                // Include review fields when book is finished
                 ...(sessionData.finishedBook && {
                     rating: sessionData.rating,
                     favoriteCharacter: sessionData.favoriteCharacter,
@@ -646,7 +642,7 @@ export function LogReadingModal({ isOpen, onClose, child, currentBooks, onSucces
         }
     });
 
-    const handleClose = () => {
+    const handleClose = useCallback(() => {
         setStep(1);
         setSessionData({
             date: new Date().toISOString().split('T')[0],
@@ -654,19 +650,26 @@ export function LogReadingModal({ isOpen, onClose, child, currentBooks, onSucces
             mood: 3
         });
         onClose();
-    };
+    }, [onClose]);
 
-    const handleSubmit = async () => {
+    const handleSubmit = useCallback(async () => {
         if (!child || !sessionData.bookId) return;
 
         try {
             await createSessionMutation.mutateAsync();
-            setStep(sessionData.finishedBook ? 6 : 5); // Success screen
+            setStep(sessionData.finishedBook ? 6 : 5);
             onSuccess();
         } catch (err) {
             console.error(err);
         }
-    };
+    }, [child, sessionData.bookId, sessionData.finishedBook, createSessionMutation, onSuccess]);
+
+    // Memoized step navigation callbacks
+    const goToStep = useCallback((s: number) => setStep(s), []);
+    const goToStep1 = useCallback(() => setStep(1), []);
+    const goToStep2 = useCallback(() => setStep(2), []);
+    const goToStep3 = useCallback(() => setStep(3), []);
+    const goToStep4 = useCallback(() => setStep(4), []);
 
     if (!isOpen) return null;
 
@@ -696,7 +699,7 @@ export function LogReadingModal({ isOpen, onClose, child, currentBooks, onSucces
                 <Step1SelectBook
                     data={sessionData}
                     onChange={setSessionData}
-                    onNext={() => setStep(2)}
+                    onNext={goToStep2}
                     onCancel={handleClose}
                     currentBooks={currentBooks}
                 />
@@ -706,8 +709,8 @@ export function LogReadingModal({ isOpen, onClose, child, currentBooks, onSucces
                 <Step2SelectDate
                     data={sessionData}
                     onChange={setSessionData}
-                    onNext={() => setStep(3)}
-                    onBack={() => setStep(1)}
+                    onNext={goToStep3}
+                    onBack={goToStep1}
                 />
             )}
 
@@ -715,8 +718,8 @@ export function LogReadingModal({ isOpen, onClose, child, currentBooks, onSucces
                 <Step3ReadingSession
                     data={sessionData}
                     onChange={setSessionData}
-                    onNext={() => setStep(4)}
-                    onBack={() => setStep(2)}
+                    onNext={goToStep4}
+                    onBack={goToStep2}
                 />
             )}
 
@@ -726,12 +729,12 @@ export function LogReadingModal({ isOpen, onClose, child, currentBooks, onSucces
                     onChange={setSessionData}
                     onNext={() => {
                         if (sessionData.finishedBook) {
-                            setStep(5); // Go to review
+                            goToStep(5);
                         } else {
-                            handleSubmit(); // Submit directly
+                            handleSubmit();
                         }
                     }}
-                    onBack={() => setStep(3)}
+                    onBack={goToStep3}
                 />
             )}
 
@@ -741,8 +744,8 @@ export function LogReadingModal({ isOpen, onClose, child, currentBooks, onSucces
                     onChange={setSessionData}
                     onSubmit={handleSubmit}
                     onBack={() => {
-                        setSessionData({ ...sessionData, finishedBook: undefined });
-                        setStep(4);
+                        setSessionData(prev => ({ ...prev, finishedBook: undefined }));
+                        goToStep4();
                     }}
                     isLoading={createSessionMutation.isPending}
                 />

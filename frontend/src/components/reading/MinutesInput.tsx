@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { COLORS } from './constants';
 
 interface MinutesInputProps {
@@ -8,7 +9,7 @@ interface MinutesInputProps {
     step?: number;
 }
 
-export const MinutesInput = ({
+export const MinutesInput = memo(({
     value,
     onChange,
     min = 5,
@@ -39,4 +40,4 @@ export const MinutesInput = ({
             </div>
         </div>
     );
-};
+});

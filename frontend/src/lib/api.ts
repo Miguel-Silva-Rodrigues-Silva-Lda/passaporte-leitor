@@ -100,10 +100,20 @@ export const familyApi = {
 // CHILDREN API
 // ============================================================================
 
+export interface ChildListItem {
+  id: string;
+  name: string;
+  avatar: string;
+  birthYear: number | null;
+  levelCategory: string;
+}
+
 export const childrenApi = {
   get: (id: string) => request<Child>(`/children/${id}`),
 
   getByFamily: (familyId: string) => request<Child[]>(`/children/family/${familyId}`),
+
+  getList: (familyId: string) => request<ChildListItem[]>(`/children/family/${familyId}/list`),
 
   create: (data: CreateChildInput) =>
     request<Child>('/children', {

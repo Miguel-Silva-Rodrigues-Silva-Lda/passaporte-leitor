@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
-import { booksApi, childrenApi } from '../lib/api';
+import { booksApi, childrenApi, type ChildListItem } from '../lib/api';
 import { useFamilyId } from '../lib/store';
-import type { Book, Child } from '../lib/types';
+import type { Book } from '../lib/types';
 import { GENRES } from '../lib/types';
 import { Modal } from '../components/ui';
 import { ChildSelector } from '../components/ChildSelector';
@@ -73,7 +73,7 @@ interface CompactBookCardProps {
   book: Book;
   onClick: () => void;
   showChild: boolean;
-  children?: Child[];
+  children?: ChildListItem[];
 }
 
 interface BookDetailModalProps {
@@ -661,8 +661,8 @@ export default function BooksPage() {
 
 
   const { data: children = [] } = useQuery({
-    queryKey: ['children', familyId],
-    queryFn: () => childrenApi.getByFamily(familyId!),
+    queryKey: ['children-list', familyId],
+    queryFn: () => childrenApi.getList(familyId!),
     enabled: !!familyId,
   });
 
