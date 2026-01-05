@@ -63,7 +63,7 @@ childRoutes.get('/:id', async (c) => {
 });
 
 // ============================================================================
-// GET /api/children/family/:familyId - Obter crianças de uma família
+// GET /api/children/family/:familyId - Obter exploradores de uma família
 // ============================================================================
 
 childRoutes.get('/family/:familyId', async (c) => {

@@ -140,6 +140,8 @@ const Step2ReadingStatus = ({ data, onChange, onNext, onBack }: any) => {
                             style={{ color: COLORS.text }}
                             value={data.startDate || new Date().toISOString().split('T')[0]}
                             onChange={(e) => onChange({ ...data, startDate: e.target.value })}
+                            min={new Date(new Date().setFullYear(new Date().getFullYear() - 4)).toISOString().split('T')[0]}
+                            max={new Date().toISOString().split('T')[0]}
                         />
                     </div>
 
@@ -155,6 +157,8 @@ const Step2ReadingStatus = ({ data, onChange, onNext, onBack }: any) => {
                                 style={{ color: COLORS.text }}
                                 value={data.finishDate || new Date().toISOString().split('T')[0]}
                                 onChange={(e) => onChange({ ...data, finishDate: e.target.value })}
+                                min={new Date(new Date().setFullYear(new Date().getFullYear() - 4)).toISOString().split('T')[0]}
+                                max={new Date().toISOString().split('T')[0]}
                             />
                         </div>
                     )}

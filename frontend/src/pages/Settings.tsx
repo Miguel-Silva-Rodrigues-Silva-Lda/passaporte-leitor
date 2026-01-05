@@ -374,7 +374,7 @@ export default function Settings() {
     mutationFn: ({ id, ...data }: any) => childrenApi.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['children', familyId] });
-      showToast('Criança atualizada!');
+      showToast('Explorador atualizado!');
       setActiveView('list');
     },
   });
@@ -383,7 +383,7 @@ export default function Settings() {
     mutationFn: (data: any) => childrenApi.create({ ...data, familyId: familyId! }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['children', familyId] });
-      showToast('Criança adicionada!');
+      showToast('Explorador adicionado!');
       setActiveView('list');
     },
   });
@@ -392,7 +392,8 @@ export default function Settings() {
     mutationFn: (id: string) => childrenApi.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['children', familyId] });
-      showToast('Criança removida', 'warning');
+      queryClient.invalidateQueries({ queryKey: ['familyStats', familyId] });
+      showToast('Explorador removido', 'warning');
       setActiveView('list');
     },
   });
@@ -433,9 +434,9 @@ export default function Settings() {
             )}
             <div>
               <h1 className="text-xl font-bold">
-                {activeView === 'list' ? '⚙️ Definições' : activeView === 'family' ? '👨‍👩‍👧‍👦 Família' : editingChild ? `✏️ ${editingChild.name}` : '➕ Nova Criança'}
+                {activeView === 'list' ? '⚙️ Definições' : activeView === 'family' ? '👨‍👩‍👧‍👦 Família' : editingChild ? `✏️ ${editingChild.name}` : '➕ Novo Explorador'}
               </h1>
-              {activeView === 'list' && <p className="text-sm text-gray-500">Gere a tua família e crianças</p>}
+              {activeView === 'list' && <p className="text-sm text-gray-500">Gere a tua família e os exploradores</p>}
             </div>
           </div>
         </div>
@@ -463,15 +464,14 @@ export default function Settings() {
 
             <div>
               <div className="flex items-center justify-between mb-3">
-                <SectionHeader icon="👶" title="Crianças" />
+                <SectionHeader icon="👶" title="Exploradores" />
                 <Button size="small" onClick={() => { setEditingChild(null); setActiveView('child'); }}>➕ Adicionar</Button>
               </div>
               {children.length === 0 ? (
                 <div className="bg-white rounded-xl p-8 text-center">
                   <span className="text-5xl block mb-3">👶</span>
-                  <p className="font-bold mb-1">Nenhuma criança</p>
-                  <p className="text-sm text-gray-500 mb-4">Adiciona uma criança</p>
-                  <Button onClick={() => { setEditingChild(null); setActiveView('child'); }}>➕ Adicionar</Button>
+                  <p className="font-bold mb-1">Nenhum explorador</p>
+                  <p className="text-sm text-gray-500 mb-4">Adiciona um explorador</p>
                 </div>
               ) : (
                 <div className="space-y-3">

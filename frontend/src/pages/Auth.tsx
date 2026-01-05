@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, Input, Select } from '../components/ui';
-import { AVATARS, BIRTH_YEARS } from '../lib/types';
+import { Button, Input } from '../components/ui';
 import { authApi } from '../lib/api';
 import { useStore } from '../lib/store';
+import { ExplorerForm } from '../components/ExplorerForm';
 
 const COLORS = {
     primary: '#E67E22',
@@ -288,47 +288,15 @@ const RegisterScreen = ({ email, onBack, onRegister }: { email: string, onBack: 
             </div>
 
             <div className="bg-white rounded-3xl p-8 shadow-lg">
-                <Input
-                    label="Nome"
-                    value={childName}
-                    onChange={(e) => { setChildName(e.target.value); setErrors({ ...errors, childName: '' }); }}
-                    placeholder="Nome do explorador"
-                    icon="👤"
-                    error={errors.childName}
+                <ExplorerForm
+                    name={childName}
+                    onNameChange={(name) => { setChildName(name); setErrors({ ...errors, childName: '' }); }}
+                    birthYear={birthYear}
+                    onBirthYearChange={(year) => { setBirthYear(year); setErrors({ ...errors, birthYear: '' }); }}
+                    avatar={childAvatar}
+                    onAvatarChange={setChildAvatar}
+                    errors={{ name: errors.childName, birthYear: errors.birthYear }}
                 />
-
-                <Select
-                    label="Ano de nascimento"
-                    value={birthYear}
-                    onChange={(v) => { setBirthYear(v); setErrors({ ...errors, birthYear: '' }); }}
-                    options={BIRTH_YEARS}
-                    placeholder="Selecionar ano..."
-                    icon="📅"
-                    error={errors.birthYear}
-                />
-
-                <div className="mb-6">
-                    <label className="block text-sm font-medium mb-3" style={{ color: COLORS.text }}>
-                        Avatar
-                    </label>
-                    <div className="grid grid-cols-8 gap-2">
-                        {AVATARS.map((a) => (
-                            <button
-                                key={a}
-                                onClick={() => setChildAvatar(a)}
-                                className={`w-10 h-10 rounded-xl text-xl transition-all ${childAvatar === a
-                                    ? 'scale-110 shadow-lg ring-2 ring-orange-400'
-                                    : 'opacity-60 hover:opacity-100'
-                                    }`}
-                                style={{
-                                    backgroundColor: childAvatar === a ? COLORS.primaryLight : '#f3f4f6',
-                                }}
-                            >
-                                {a}
-                            </button>
-                        ))}
-                    </div>
-                </div>
 
                 <Button
                     onClick={handleRegister}

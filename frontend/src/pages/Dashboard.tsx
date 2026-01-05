@@ -2,11 +2,11 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useStore, useChildren, useSelectedChild, useFamilyId } from '../lib/store';
 import { statsApi, childrenApi } from '../lib/api';
-import { Button, Card, Modal, Input, Select } from '../components/ui';
-import { AVATARS, BIRTH_YEARS } from '../lib/types';
+import { Button, Card, Modal } from '../components/ui';
 import { ChildCard } from '../components/ChildCard';
 import { AddBookModal } from '../components/AddBookModal';
 import { LogReadingModal } from '../components/LogReadingModal';
+import { ExplorerForm } from '../components/ExplorerForm';
 
 export default function Dashboard() {
   const familyId = useFamilyId();
@@ -204,43 +204,14 @@ function AddChildModal({
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="👶 Adicionar Explorador">
-      <Input
-        label="Nome"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        placeholder="Nome do explorador"
-        icon="👤"
+      <ExplorerForm
+        name={name}
+        onNameChange={setName}
+        birthYear={birthYear}
+        onBirthYearChange={setBirthYear}
+        avatar={avatar}
+        onAvatarChange={setAvatar}
       />
-
-      <Select
-        label="Ano de nascimento"
-        value={birthYear}
-        onChange={(v) => setBirthYear(v)}
-        options={BIRTH_YEARS}
-        placeholder="Selecionar ano..."
-        icon="📅"
-      />
-
-      <div className="mb-4">
-        <label className="block text-sm font-medium mb-2 text-gray-800">
-          Avatar
-        </label>
-        <div className="grid grid-cols-8 gap-2">
-          {AVATARS.map((a) => (
-            <button
-              key={a}
-              onClick={() => setAvatar(a)}
-              className={`w-10 h-10 rounded-lg text-xl transition-all ${avatar === a
-                ? 'scale-110 shadow-md ring-2 ring-primary'
-                : 'opacity-60 hover:opacity-100'
-                }`}
-              style={{ backgroundColor: avatar === a ? '#F5A623' : '#f3f4f6' }}
-            >
-              {a}
-            </button>
-          ))}
-        </div>
-      </div>
 
       <div className="flex gap-3 mt-6">
         <Button variant="secondary" onClick={onClose}>
