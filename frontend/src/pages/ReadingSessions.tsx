@@ -5,6 +5,7 @@ import { useFamilyId } from '../lib/store';
 import { Modal, Button } from '../components/ui';
 import { COLORS, MOODS, MoodSelector, MinutesInput } from '../components/reading';
 import { ChildSelector } from '../components/ChildSelector';
+import { formatDate } from '../lib/utils';
 
 // ============================================================================
 // TYPES
@@ -29,29 +30,6 @@ interface Child {
     name: string;
     avatar: string;
 }
-
-// ============================================================================
-// HELPER FUNCTIONS
-// ============================================================================
-
-const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-
-    const todayStr = today.toISOString().split('T')[0];
-    const yesterdayStr = yesterday.toISOString().split('T')[0];
-
-    if (dateStr === todayStr) return 'Hoje';
-    if (dateStr === yesterdayStr) return 'Ontem';
-
-    return date.toLocaleDateString('pt-PT', {
-        day: 'numeric',
-        month: 'short',
-        year: date.getFullYear() !== today.getFullYear() ? 'numeric' : undefined
-    });
-};
 
 // ============================================================================
 // FILTER BAR COMPONENT

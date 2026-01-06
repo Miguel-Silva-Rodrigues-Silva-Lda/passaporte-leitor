@@ -3,6 +3,7 @@ import prisma from '../lib/prisma.js';
 import { getGenreStats } from '../services/achievements.js';
 import { getCurrentLevel, getNextLevel, getLevelProgress, getBooksToNextLevel } from '../lib/levels-config.js';
 import { verifyFamilyParam, verifyChildOwnership } from '../middleware/authorization.js';
+import { serializeBooks } from '../lib/serializers.js';
 
 export const statsRoutes = new Hono();
 
@@ -36,10 +37,7 @@ statsRoutes.get('/child/:childId', async (c) => {
   }
 
   // Serialize book status to lowercase
-  const serializedBooks = child.books.map(book => ({
-    ...book,
-    status: book.status.toLowerCase().replace(/_/g, '-') as 'to-read' | 'reading' | 'finished'
-  }));
+  const serializedBooks = serializeBooks(child.books);
 
   const bookCount = serializedBooks.length;
   const finishedBooksCount = serializedBooks.filter((b: any) => b.status === 'finished').length;
@@ -152,12 +150,7 @@ statsRoutes.get('/family/:familyId', async (c) => {
     return c.json({ error: 'Família não encontrada' }, 404);
   }
 
-  const allBooks = family.children.flatMap((c) =>
-    c.books.map(book => ({
-      ...book,
-      status: book.status.toLowerCase().replace(/_/g, '-') as 'to-read' | 'reading' | 'finished'
-    }))
-  );
+  const allBooks = family.children.flatMap((c) => serializeBooks(c.books));
   const totalBooks = allBooks.length;
 
   // Count unique genres discovered
@@ -165,11 +158,8 @@ statsRoutes.get('/family/:familyId', async (c) => {
 
   // Estatísticas por criança
   const childStats = family.children.map((child) => {
-    const serializedChildBooks = child.books.map(book => ({
-      ...book,
-      status: book.status.toLowerCase().replace(/_/g, '-') as 'to-read' | 'reading' | 'finished'
-    }));
-    const finishedCount = serializedChildBooks.filter((b: any) => b.status === 'finished').length;
+    const serializedChildBooks = serializeBooks(child.books);
+    const finishedCount = serializedChildBooks.filter((b) => b.status === 'finished').length;
     const childLevelCategory = child.levelCategory || 'EXPLORERS';
     const childCurrentLevel = getCurrentLevel(finishedCount, childLevelCategory);
     const childNextLevel = getNextLevel(finishedCount, childLevelCategory);
@@ -245,11 +235,8 @@ statsRoutes.get('/leaderboard/:familyId', async (c) => {
         ? child.books.filter((b: any) => b.finishDate && new Date(b.finishDate) >= filterDate!)
         : child.books;
 
-      const serializedChildBooks = child.books.map(book => ({
-        ...book,
-        status: book.status.toLowerCase().replace(/_/g, '-') as 'to-read' | 'reading' | 'finished'
-      }));
-      const childFinished = serializedChildBooks.filter((b: any) => b.status === 'finished').length;
+      const serializedChildBooks = serializeBooks(child.books);
+      const childFinished = serializedChildBooks.filter((b) => b.status === 'finished').length;
       const childCategory = child.levelCategory || 'EXPLORERS';
       const childCurLevel = getCurrentLevel(childFinished, childCategory);
       const childNxtLevel = getNextLevel(childFinished, childCategory);

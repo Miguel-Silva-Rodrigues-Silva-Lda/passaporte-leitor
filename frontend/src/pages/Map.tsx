@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useFamilyId } from '../lib/store';
 import { mapApi } from '../lib/api';
 import { ChildSelector } from '../components/ChildSelector';
+import { COLORS } from '../lib/constants';
 
 // ============================================================================
 // TYPES
@@ -39,18 +40,6 @@ interface MapResponse {
   children: ChildData[];
   aggregated: ChildData & { levelCategory: string };
 }
-
-// ============================================================================
-// DESIGN TOKENS & CONFIG
-// ============================================================================
-
-const COLORS = {
-  primary: '#E67E22',
-  secondary: '#3498DB',
-  success: '#27AE60',
-  background: '#FDF6E3',
-  text: '#2C3E50',
-};
 
 // Visualization limits based on progression milestones
 const MAX_FISH_COUNT = 50;  // Number of books in the last level

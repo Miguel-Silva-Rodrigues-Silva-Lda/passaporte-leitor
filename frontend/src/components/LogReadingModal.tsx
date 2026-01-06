@@ -5,31 +5,7 @@ import clsx from 'clsx';
 import type { Child } from '../lib/types';
 import { TimeInput, MoodSelector, COLORS } from './reading';
 import { readingLogsApi } from '../lib/api';
-
-// ============================================================================
-// HELPER FUNCTIONS
-// ============================================================================
-
-const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-
-    if (dateStr === today.toISOString().split('T')[0]) {
-        return 'Hoje';
-    } else if (dateStr === yesterday.toISOString().split('T')[0]) {
-        return 'Ontem';
-    } else {
-        return date.toLocaleDateString('pt-PT', { weekday: 'short', day: 'numeric', month: 'short' });
-    }
-};
-
-const getDaysAgo = (days: number) => {
-    const date = new Date();
-    date.setDate(date.getDate() - days);
-    return date.toISOString().split('T')[0];
-};
+import { formatDate, getDaysAgo } from '../lib/utils';
 
 // ============================================================================
 // TYPESCRIPT INTERFACES
@@ -86,7 +62,7 @@ const DateSelector = memo(({ value, onChange, minDate }: { value: string; onChan
     // Generate last 3 days, but only include those >= minDate
     const recentDays = Array.from({ length: 3 }, (_, i) => ({
         date: getDaysAgo(i),
-        label: i === 0 ? 'Hoje' : i === 1 ? 'Ontem' : formatDate(getDaysAgo(i)),
+        label: i === 0 ? 'Hoje' : i === 1 ? 'Ontem' : formatDate(getDaysAgo(i), { includeWeekday: true }),
         isToday: i === 0,
     })).filter(day => !minDate || day.date >= minDate);
 

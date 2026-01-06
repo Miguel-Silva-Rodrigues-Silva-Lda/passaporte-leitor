@@ -4,6 +4,7 @@ import { BookStatus } from '@prisma/client';
 import prisma from '../lib/prisma.js';
 import { getCurrentLevel, getNextLevel, getLevelProgress, getBooksToNextLevel } from '../lib/levels-config.js';
 import { verifyFamilyParam, verifyChildOwnership } from '../middleware/authorization.js';
+import { serializeBooks } from '../lib/serializers.js';
 
 export const childRoutes = new Hono();
 
@@ -60,10 +61,7 @@ childRoutes.get('/:id', async (c) => {
   // Serialize book status to lowercase
   const serializedChild = {
     ...child,
-    books: child.books.map(book => ({
-      ...book,
-      status: book.status.toLowerCase().replace(/_/g, '-') as 'to-read' | 'reading' | 'finished'
-    }))
+    books: serializeBooks(child.books)
   };
 
   return c.json(serializedChild);
@@ -115,10 +113,7 @@ childRoutes.get('/family/:familyId', async (c) => {
   // Serialize book status to lowercase for all children
   const serializedChildren = children.map(child => ({
     ...child,
-    books: child.books.map((book: any) => ({
-      ...book,
-      status: book.status.toLowerCase().replace(/_/g, '-') as 'to-read' | 'reading' | 'finished'
-    }))
+    books: serializeBooks(child.books)
   }));
 
   // Transform data for dashboard

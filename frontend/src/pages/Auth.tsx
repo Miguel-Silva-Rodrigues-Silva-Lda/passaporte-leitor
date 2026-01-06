@@ -4,14 +4,7 @@ import { Button, Input } from '../components/ui';
 import { authApi } from '../lib/api';
 import { useStore } from '../lib/store';
 import { ExplorerForm } from '../components/ExplorerForm';
-
-const COLORS = {
-    primary: '#E67E22',
-    primaryLight: '#FDEBD0',
-    success: '#27AE60',
-    background: '#FDFBF7',
-    text: '#2C3E50',
-};
+import { COLORS } from '../lib/constants';
 
 // ============================================================================
 // SCREENS

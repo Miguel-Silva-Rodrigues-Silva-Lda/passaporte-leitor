@@ -1,27 +1,7 @@
 import { useState } from 'react';
 import { GENRES, type Child, type LevelCategory } from '../lib/types';
 import { THEME_CONFIG } from '../lib/themeConfig';
-
-// ============================================================================
-// DESIGN TOKENS
-// ==================================================== ========================
-
-const COLORS = {
-    primary: '#E67E22',
-    primaryLight: '#F5A623',
-    primaryDark: '#D35400',
-    secondary: '#3498DB',
-    success: '#27AE60',
-    successLight: '#58D68D',
-    warning: '#F39C12',
-    danger: '#E74C3C',
-    background: '#FDF6E3',
-    card: '#FFFFFF',
-    text: '#2C3E50',
-    textLight: '#7F8C8D',
-    border: '#E8E0D5',
-    streak: '#FF6B35',
-};
+import { COLORS } from '../lib/constants';
 
 
 // ============================================================================

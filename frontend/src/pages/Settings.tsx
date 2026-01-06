@@ -5,17 +5,7 @@ import { familyApi, childrenApi } from '../lib/api';
 import { useFamilyId } from '../lib/store';
 import { THEME_CONFIG } from '../lib/themeConfig';
 import { Button } from '../components/ui';
-
-
-// ============================================================================
-// DESIGN TOKENS
-// ============================================================================
-
-const COLORS = {
-  primary: '#E67E22',
-  background: '#FDF6E3',
-  text: '#2C3E50',
-};
+import { COLORS } from '../lib/constants';
 
 // ============================================================================
 // LEVEL CATEGORIES

@@ -4,6 +4,7 @@ import { Genre, BookStatus } from '@prisma/client';
 import prisma from '../lib/prisma.js';
 import { checkAndAwardAchievements } from '../services/achievements.js';
 import { verifyFamilyParam, verifyChildOwnership, verifyBookOwnership } from '../middleware/authorization.js';
+import { serializeBooks } from '../lib/serializers.js';
 
 export const bookRoutes = new Hono();
 
@@ -172,14 +173,8 @@ bookRoutes.get('/family/:familyId', async (c) => {
     prisma.book.count({ where: { ...baseWhere, status: BookStatus.FINISHED } }),
   ]);
 
-  // Convert BookStatus enum to lowercase mapped values for API response
-  const serializedBooks = books.map(book => ({
-    ...book,
-    status: book.status.toLowerCase().replace(/_/g, '-') as 'to-read' | 'reading' | 'finished'
-  }));
-
   return c.json({
-    books: serializedBooks,
+    books: serializeBooks(books),
     counts: {
       reading: countReading,
       'to-read': countToRead,
@@ -243,13 +238,7 @@ bookRoutes.get('/child/:childId', async (c) => {
     prisma.book.count({ where })
   ]);
 
-  // Convert BookStatus enum to lowercase mapped values for API response
-  const serializedBooks = books.map(book => ({
-    ...book,
-    status: book.status.toLowerCase().replace(/_/g, '-') as 'to-read' | 'reading' | 'finished'
-  }));
-
-  return c.json({ books: serializedBooks, total });
+  return c.json({ books: serializeBooks(books), total });
 });
 
 // ... POST endpoints follow ...

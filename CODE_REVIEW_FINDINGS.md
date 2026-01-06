@@ -13,16 +13,6 @@ The Passaporte Leitor application is a well-structured children's reading tracke
 
 ## Critical Issues (Immediate Action Required)
 
-### 1. Missing Authorization on Family Map Endpoint
-| | |
-|---|---|
-| **Severity** | CRITICAL |
-| **File** | `backend/src/routes/map.ts:219-244` |
-| **Endpoint** | `GET /api/map/family/:familyId` |
-| **Issue** | No verification that authenticated user owns the family |
-| **Risk** | Any authenticated user can access ANY family's data by guessing IDs |
-| **Fix** | Add `getAuthFamilyId(c) === familyId` check or use `verifyFamilyParam()` middleware |
-
 ### 2. Email Enumeration Vulnerability
 | | |
 |---|---|
@@ -70,14 +60,7 @@ The Passaporte Leitor application is a well-structured children's reading tracke
 
 ## Medium Priority Issues
 
-### Code Duplication
 
-| Duplicated Code | Locations | Recommendation |
-|-----------------|-----------|----------------|
-| `COLORS` constant | Auth.tsx, Books.tsx, ChildCard.tsx, ReadingSessions.tsx | Create `lib/constants.ts` |
-| `formatDate()` function | ReadingSessions.tsx:37-54, LogReadingModal.tsx:13-26 | Create `lib/utils.ts` |
-| Status serialization | books.ts, children.ts, stats.ts, map.ts | Create `lib/serializers.ts` |
-| Level calculation | children.ts, stats.ts, map.ts | Already in levels-config.ts but duplicated inline |
 
 ### Type Safety
 

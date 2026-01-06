@@ -6,25 +6,7 @@ import type { Book } from '../lib/types';
 import { GENRES, BOOK_STATUS_CONFIG } from '../lib/types';
 import { Modal } from '../components/ui';
 import { ChildSelector } from '../components/ChildSelector';
-
-// ============================================================================
-// DESIGN TOKENS & CONSTANTS
-// ============================================================================
-
-const COLORS = {
-  primary: '#E67E22',
-  primaryLight: '#F5A623',
-  primaryDark: '#D35400',
-  secondary: '#3498DB',
-  success: '#27AE60',
-  warning: '#F39C12',
-  danger: '#E74C3C',
-  background: '#FDF6E3',
-  card: '#FFFFFF',
-  text: '#2C3E50',
-  textLight: '#7F8C8D',
-  border: '#E8E0D5',
-};
+import { COLORS } from '../lib/constants';
 
 // Extend shared config with page-specific styling
 export const STATUS_CONFIG = {
