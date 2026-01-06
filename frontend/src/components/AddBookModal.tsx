@@ -454,7 +454,6 @@ export function AddBookModal({ isOpen, onClose, child, onSuccess }: AddBookModal
 
             // Only create book if it doesn't already exist
             if (!bookId) {
-                console.log('Creating new book...');
                 const result = await createBookMutation.mutateAsync({
                     childId: child.id,
                     title: bookData.title,
@@ -471,14 +470,10 @@ export function AddBookModal({ isOpen, onClose, child, onSuccess }: AddBookModal
                     dateRead: new Date().toISOString()
                 } as CreateBookInput);
                 bookId = result.book.id;
-                console.log('Book created with ID:', bookId);
-            } else {
-                console.log('Using existing book ID:', bookId);
             }
 
             // Create reading session if applicable
             if ((bookData.readToday || isEndDateToday) && bookData.readingMinutes && bookId) {
-                console.log('Creating reading session for book:', bookId);
                 await createReadingLogMutation.mutateAsync({
                     childId: child.id,
                     bookId: bookId,
@@ -517,7 +512,6 @@ export function AddBookModal({ isOpen, onClose, child, onSuccess }: AddBookModal
                 } else if (bookData.readToday === true) {
                     // Only create book if it doesn't already exist
                     if (!(bookData as any).id) {
-                        console.log('Creating book for reading session...');
                         const result = await createBookMutation.mutateAsync({
                             childId: child!.id,
                             title: bookData.title!,
@@ -532,8 +526,6 @@ export function AddBookModal({ isOpen, onClose, child, onSuccess }: AddBookModal
                         setBookData({ ...bookData, id: result.book.id } as any);
                         // Invalidate cache immediately so child card updates even if modal is closed
                         queryClient.invalidateQueries({ queryKey: ['children'] });
-                    } else {
-                        console.log('Book already exists, skipping creation');
                     }
                     setStep(4);
                 }
@@ -544,7 +536,6 @@ export function AddBookModal({ isOpen, onClose, child, onSuccess }: AddBookModal
                 } else {
                     // Only create book if it doesn't already exist
                     if (!(bookData as any).id) {
-                        console.log('Creating finished book for reading session...');
                         const result = await createBookMutation.mutateAsync({
                             childId: child!.id,
                             title: bookData.title!,
@@ -563,8 +554,6 @@ export function AddBookModal({ isOpen, onClose, child, onSuccess }: AddBookModal
                         setBookData({ ...bookData, id: result.book.id } as any);
                         // Invalidate cache immediately so child card updates even if modal is closed
                         queryClient.invalidateQueries({ queryKey: ['children'] });
-                    } else {
-                        console.log('Book already exists, skipping creation');
                     }
                     setStep(4);
                 }

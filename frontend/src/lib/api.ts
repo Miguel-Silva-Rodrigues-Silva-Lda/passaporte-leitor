@@ -8,6 +8,7 @@ import type {
   CreateFamilyInput,
   CreateChildInput,
   CreateBookInput,
+  RegisterInput,
   Genre,
 } from './types';
 
@@ -38,6 +39,11 @@ async function request<T>(endpoint: string, options?: RequestInit): Promise<T> {
   });
 
   if (!response.ok) {
+    // Handle token expiration - redirect to auth page
+    if (response.status === 401) {
+      localStorage.removeItem('authToken');
+      window.location.href = '/';
+    }
     const error = await response.json().catch(() => ({ error: 'Unknown error' }));
     throw new ApiError(response.status, error.error || 'Request failed');
   }
@@ -56,7 +62,7 @@ export const authApi = {
       body: JSON.stringify({ email }),
     }),
 
-  register: (data: any) =>
+  register: (data: RegisterInput) =>
     request<{ token: string; family: Family; firstChild: Child }>('/auth/register', {
       method: 'POST',
       body: JSON.stringify(data),

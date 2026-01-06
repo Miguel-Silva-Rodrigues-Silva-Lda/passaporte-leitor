@@ -229,6 +229,17 @@ export interface CreateFamilyInput {
   email?: string;
 }
 
+export interface RegisterInput {
+  familyName: string;
+  email: string;
+  password: string;
+  child: {
+    name: string;
+    avatar: string;
+    birthYear: number;
+  };
+}
+
 export interface CreateChildInput {
   familyId: string;
   name: string;
