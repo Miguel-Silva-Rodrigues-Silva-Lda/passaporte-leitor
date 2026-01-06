@@ -76,8 +76,6 @@ export const authApi = {
 export const familyApi = {
   get: (id: string) => request<Family>(`/family/${id}`),
 
-  getFull: (id: string) => request<Family>(`/family/${id}/full`),
-
   create: (data: CreateFamilyInput) =>
     request<Family>('/family', {
       method: 'POST',

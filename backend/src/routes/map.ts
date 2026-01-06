@@ -276,7 +276,7 @@ mapRoutes.get('/family/:familyId', async (c) => {
             );
             const totalReadingDays = uniqueDates.size;
 
-            const streak = await calculateStreak(child.id);
+            const streak = await calculateStreak(child.id, child.readingSessions);
 
             const totalMinutes = child.readingSessions.reduce(
                 (sum: number, s: any) => sum + (s.minutes || 0),
