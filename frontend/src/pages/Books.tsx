@@ -88,6 +88,14 @@ interface EmptyStateProps {
   isSearch: boolean;
 }
 
+interface PaginationProps {
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+}
+
+const ITEMS_PER_PAGE = 10;
+
 // ============================================================================
 // SEARCH BAR
 // ============================================================================
@@ -613,6 +621,81 @@ const BookDetailModal = ({ book, isOpen, onClose }: BookDetailModalProps) => {
 };
 
 // ============================================================================
+// PAGINATION
+// ============================================================================
+
+const Pagination = ({ currentPage, totalPages, onPageChange }: PaginationProps) => {
+  if (totalPages <= 1) return null;
+
+  const getVisiblePages = () => {
+    const pages: (number | 'ellipsis')[] = [];
+
+    if (totalPages <= 5) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      pages.push(1);
+
+      if (currentPage > 3) pages.push('ellipsis');
+
+      const start = Math.max(2, currentPage - 1);
+      const end = Math.min(totalPages - 1, currentPage + 1);
+
+      for (let i = start; i <= end; i++) pages.push(i);
+
+      if (currentPage < totalPages - 2) pages.push('ellipsis');
+
+      pages.push(totalPages);
+    }
+
+    return pages;
+  };
+
+  return (
+    <div className="flex items-center justify-center gap-1 py-4">
+      <button
+        onClick={() => onPageChange(currentPage - 1)}
+        disabled={currentPage === 1}
+        className="px-3 py-2 rounded-lg text-sm font-medium disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-100 transition-colors"
+        style={{ color: COLORS.text }}
+      >
+        ←
+      </button>
+
+      {getVisiblePages().map((page, i) =>
+        page === 'ellipsis' ? (
+          <span key={`ellipsis-${i}`} className="px-2 text-gray-400">...</span>
+        ) : (
+          <button
+            key={page}
+            onClick={() => onPageChange(page)}
+            className={`w-9 h-9 rounded-lg text-sm font-medium transition-all ${
+              currentPage === page
+                ? 'shadow-md scale-105'
+                : 'hover:bg-gray-100'
+            }`}
+            style={{
+              backgroundColor: currentPage === page ? COLORS.primary : 'transparent',
+              color: currentPage === page ? 'white' : COLORS.text,
+            }}
+          >
+            {page}
+          </button>
+        )
+      )}
+
+      <button
+        onClick={() => onPageChange(currentPage + 1)}
+        disabled={currentPage === totalPages}
+        className="px-3 py-2 rounded-lg text-sm font-medium disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-100 transition-colors"
+        style={{ color: COLORS.text }}
+      >
+        →
+      </button>
+    </div>
+  );
+};
+
+// ============================================================================
 // EMPTY STATE
 // ============================================================================
 
@@ -659,7 +742,12 @@ export default function BooksPage() {
   const [sortBy, setSortBy] = useState<SortBy>('recent');
   const [search, setSearch] = useState('');
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedChildId, statusFilter, genreFilter, search, sortBy]);
 
   const { data: children = [] } = useQuery({
     queryKey: ['children-list', familyId],
@@ -667,24 +755,36 @@ export default function BooksPage() {
     enabled: !!familyId,
   });
 
-  const { data: books = [] } = useQuery({
-    queryKey: ['books', familyId, selectedChildId, statusFilter, genreFilter, search, sortBy],
+  const { data: booksData } = useQuery({
+    queryKey: ['books', familyId, selectedChildId, statusFilter, genreFilter, search, sortBy, currentPage],
     queryFn: () => booksApi.getByFamily(familyId!, {
       status: statusFilter !== 'all' ? statusFilter : undefined,
       genre: genreFilter !== 'all' ? genreFilter : undefined,
       childId: selectedChildId !== 'all' ? selectedChildId : undefined,
       search: search || undefined,
       sortBy,
+      limit: ITEMS_PER_PAGE,
+      offset: (currentPage - 1) * ITEMS_PER_PAGE,
     }),
     enabled: !!familyId,
   });
 
-  // Calculate counts for current filters
+  const books = booksData?.books ?? [];
+  const apiCounts = booksData?.counts ?? { reading: 0, 'to-read': 0, finished: 0 };
+  const totalBooks = apiCounts.reading + apiCounts['to-read'] + apiCounts.finished;
+
+  // Calculate total pages based on current status filter
+  const filteredTotal = statusFilter === 'all'
+    ? totalBooks
+    : apiCounts[statusFilter];
+  const totalPages = Math.ceil(filteredTotal / ITEMS_PER_PAGE);
+
+  // Use counts from API
   const counts: FilterCounts = {
-    total: books.length,
-    READING: books.filter(b => b.status === 'reading').length,
-    TO_READ: books.filter(b => b.status === 'to-read').length,
-    FINISHED: books.filter(b => b.status === 'finished').length,
+    total: totalBooks,
+    READING: apiCounts.reading,
+    TO_READ: apiCounts['to-read'],
+    FINISHED: apiCounts.finished,
   };
 
   return (
@@ -729,7 +829,7 @@ export default function BooksPage() {
       {search && (
         <div className="max-w-2xl mx-auto px-4 pb-2">
           <p className="text-sm text-gray-500">
-            {books.length} resultado{books.length !== 1 ? 's' : ''} para "<span className="font-medium">{search}</span>"
+            {totalBooks} resultado{totalBooks !== 1 ? 's' : ''} para "<span className="font-medium">{search}</span>"
           </p>
         </div>
       )}
@@ -738,17 +838,24 @@ export default function BooksPage() {
         {books.length === 0 ? (
           <EmptyState filter={statusFilter} isSearch={!!search} />
         ) : (
-          <div className="grid grid-cols-2 gap-2">
-            {books.map((book) => (
-              <CompactBookCard
-                key={book.id}
-                book={book}
-                onClick={() => setSelectedBook(book)}
-                showChild={selectedChildId === 'all'}
-                children={children}
-              />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-2 gap-2">
+              {books.map((book) => (
+                <CompactBookCard
+                  key={book.id}
+                  book={book}
+                  onClick={() => setSelectedBook(book)}
+                  showChild={selectedChildId === 'all'}
+                  children={children}
+                />
+              ))}
+            </div>
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
+          </>
         )}
       </div>
 

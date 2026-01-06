@@ -146,6 +146,8 @@ export const booksApi = {
       childId?: string;
       search?: string;
       sortBy?: 'recent' | 'title' | 'rating' | 'progress';
+      limit?: number;
+      offset?: number;
     }
   ) => {
     const params = new URLSearchParams();
@@ -154,9 +156,14 @@ export const booksApi = {
     if (filters?.childId) params.append('childId', filters.childId);
     if (filters?.search) params.append('search', filters.search);
     if (filters?.sortBy) params.append('sortBy', filters.sortBy);
+    if (filters?.limit) params.append('limit', filters.limit.toString());
+    if (filters?.offset) params.append('offset', filters.offset.toString());
 
     const queryString = params.toString();
-    return request<Book[]>(`/books/family/${familyId}${queryString ? `?${queryString}` : ''}`);
+    return request<{
+      books: Book[];
+      counts: { reading: number; 'to-read': number; finished: number };
+    }>(`/books/family/${familyId}${queryString ? `?${queryString}` : ''}`);
   },
 
   get: (id: string) => request<Book>(`/books/${id}`),

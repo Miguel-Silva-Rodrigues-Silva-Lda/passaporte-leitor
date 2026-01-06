@@ -71,6 +71,8 @@ bookRoutes.get('/family/:familyId', async (c) => {
   const childId = c.req.query('childId'); // Specific child or undefined for all children
   const search = c.req.query('search'); // Search by title or author
   const sortBy = c.req.query('sortBy') || 'recent'; // 'recent', 'title', 'rating', 'progress'
+  const limit = c.req.query('limit'); // Pagination: number of items per page
+  const offset = c.req.query('offset'); // Pagination: skip N items
 
   // Build where clause
   const where: any = {
@@ -127,7 +129,8 @@ bookRoutes.get('/family/:familyId', async (c) => {
       break;
   }
 
-  const books = await prisma.book.findMany({
+  // Build query options
+  const queryOptions: any = {
     where,
     orderBy,
     include: {
@@ -139,7 +142,35 @@ bookRoutes.get('/family/:familyId', async (c) => {
         }
       }
     }
-  });
+  };
+
+  // Add pagination if provided
+  if (limit) {
+    queryOptions.take = parseInt(limit);
+  }
+  if (offset) {
+    queryOptions.skip = parseInt(offset);
+  }
+
+  // Build base where clause without status filter for counts
+  const baseWhere: any = {
+    child: { familyId }
+  };
+  if (genre) baseWhere.genre = genre;
+  if (childId) baseWhere.childId = childId;
+  if (search) {
+    baseWhere.OR = [
+      { title: { contains: search, mode: 'insensitive' } },
+      { author: { contains: search, mode: 'insensitive' } }
+    ];
+  }
+
+  const [books, countReading, countToRead, countFinished] = await Promise.all([
+    prisma.book.findMany(queryOptions),
+    prisma.book.count({ where: { ...baseWhere, status: BookStatus.READING } }),
+    prisma.book.count({ where: { ...baseWhere, status: BookStatus.TO_READ } }),
+    prisma.book.count({ where: { ...baseWhere, status: BookStatus.FINISHED } }),
+  ]);
 
   // Convert BookStatus enum to lowercase mapped values for API response
   const serializedBooks = books.map(book => ({
@@ -147,7 +178,14 @@ bookRoutes.get('/family/:familyId', async (c) => {
     status: book.status.toLowerCase().replace(/_/g, '-') as 'to-read' | 'reading' | 'finished'
   }));
 
-  return c.json(serializedBooks);
+  return c.json({
+    books: serializedBooks,
+    counts: {
+      reading: countReading,
+      'to-read': countToRead,
+      finished: countFinished,
+    }
+  });
 });
 
 // ============================================================================

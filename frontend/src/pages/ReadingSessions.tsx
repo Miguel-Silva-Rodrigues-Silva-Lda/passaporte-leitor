@@ -546,7 +546,7 @@ export default function ReadingSessions() {
 
     // Pagination state
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 20;
+    const itemsPerPage = 10;
 
     // Modal state
     const [editSession, setEditSession] = useState<Session | null>(null);
