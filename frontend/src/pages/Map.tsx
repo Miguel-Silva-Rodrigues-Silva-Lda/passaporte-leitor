@@ -164,14 +164,14 @@ const StatsPanel = ({
 
 const LivingAquarium = ({
   rank = 3,
-  todayMinutes = 18,
-  dailyGoal = 15,
-  totalReadingDays = 45,
-  streak = 7,
-  totalHours = 32,
+  todayMinutes = 0,
+  dailyGoal,
+  totalReadingDays = 0,
+  streak = 0,
+  totalHours = 0,
   childName = null,
   currentLevel,
-}: MapVisualizationProps) => {
+}: MapVisualizationProps & { dailyGoal: number }) => {
   // Fallback level if not provided
   const level = currentLevel || { rank: 1, name: 'Iniciante', minBooks: 0, icon: '🐣', color: '#BDC3C7' };
   const goalMet = todayMinutes >= dailyGoal;
@@ -418,14 +418,14 @@ const LivingAquarium = ({
 
 const ConstellationMap = ({
   rank = 3,
-  todayMinutes = 18,
-  dailyGoal = 15,
-  totalReadingDays = 45,
-  streak = 7,
-  totalHours = 32,
+  todayMinutes = 0,
+  dailyGoal,
+  totalReadingDays = 0,
+  streak = 0,
+  totalHours = 0,
   childName = null,
   currentLevel,
-}: MapVisualizationProps) => {
+}: MapVisualizationProps & { dailyGoal: number }) => {
   // Fallback level if not provided
   const level = currentLevel || { rank: 1, name: 'Iniciante', minBooks: 0, icon: '⭐', color: '#BDC3C7' };
   const goalMet = todayMinutes >= dailyGoal;
@@ -670,7 +670,7 @@ const FamilyAquarium = ({ children }: { children: ChildData[] }) => {
   }
 
   const totalTodayMinutes = children.reduce((sum: number, c: ChildData) => sum + c.todayMinutes, 0);
-  const avgDailyGoal = Math.round(children.reduce((sum: number, c: ChildData) => sum + c.dailyGoal, 0) / children.length);
+  const totalDailyGoal = children.reduce((sum: number, c: ChildData) => sum + c.dailyGoal, 0);
   const totalReadingDays = children.reduce((sum: number, c: ChildData) => sum + c.totalReadingDays, 0);
   const maxStreak = Math.max(...children.map((c: ChildData) => c.streak));
   const totalHours = children.reduce((sum: number, c: ChildData) => sum + c.totalHours, 0);
@@ -683,7 +683,7 @@ const FamilyAquarium = ({ children }: { children: ChildData[] }) => {
     <LivingAquarium
       rank={avgRank}
       todayMinutes={totalTodayMinutes}
-      dailyGoal={avgDailyGoal * children.length}
+      dailyGoal={totalDailyGoal}
       totalReadingDays={totalReadingDays}
       streak={maxStreak}
       totalHours={totalHours}
@@ -709,7 +709,7 @@ const FamilyConstellation = ({ children }: { children: ChildData[] }) => {
   }
 
   const totalTodayMinutes = children.reduce((sum: number, c: ChildData) => sum + c.todayMinutes, 0);
-  const avgDailyGoal = Math.round(children.reduce((sum: number, c: ChildData) => sum + c.dailyGoal, 0) / children.length);
+  const totalDailyGoal = children.reduce((sum: number, c: ChildData) => sum + c.dailyGoal, 0);
   const totalReadingDays = children.reduce((sum: number, c: ChildData) => sum + c.totalReadingDays, 0);
   const maxStreak = Math.max(...children.map((c: ChildData) => c.streak));
   const totalHours = children.reduce((sum: number, c: ChildData) => sum + c.totalHours, 0);
@@ -722,7 +722,7 @@ const FamilyConstellation = ({ children }: { children: ChildData[] }) => {
     <ConstellationMap
       rank={avgRank}
       todayMinutes={totalTodayMinutes}
-      dailyGoal={avgDailyGoal * children.length}
+      dailyGoal={totalDailyGoal}
       totalReadingDays={totalReadingDays}
       streak={maxStreak}
       totalHours={totalHours}

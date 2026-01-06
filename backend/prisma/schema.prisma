@@ -83,6 +83,7 @@ model Child {
   avatar        String        @default("👦")
   birthYear     Int?
   levelCategory LevelCategory @default(EXPLORERS)
+  dailyGoal     Int           @default(15)  // Daily reading goal in minutes
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 

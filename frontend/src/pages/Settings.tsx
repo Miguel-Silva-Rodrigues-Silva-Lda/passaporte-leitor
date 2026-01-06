@@ -91,6 +91,26 @@ const BirthYearSelect = ({ value, onChange, error }: any) => (
   </div>
 );
 
+const DAILY_GOAL_OPTIONS = [15, 20, 30, 45, 60, 90, 120];
+
+const DailyGoalSelect = ({ value, onChange }: any) => (
+  <div className="mb-4">
+    <label className="block text-sm font-medium mb-2" style={{ color: COLORS.text }}>Meta Diária de Leitura</label>
+    <select
+      value={value || 15}
+      onChange={(e) => onChange(parseInt(e.target.value))}
+      className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:outline-none"
+    >
+      {DAILY_GOAL_OPTIONS.map(minutes => (
+        <option key={minutes} value={minutes}>
+          {minutes} minutos {minutes === 15 ? '(recomendado)' : ''}
+        </option>
+      ))}
+    </select>
+    <p className="text-xs text-gray-400 mt-1">Tempo de leitura diário para atingir a meta</p>
+  </div>
+);
+
 const LevelCategorySelector = ({ selected, onChange }: any) => (
   <div className="mb-4">
     <label className="block text-sm font-medium mb-2" style={{ color: COLORS.text }}>Tema da Aventura</label>
@@ -261,6 +281,7 @@ const ChildForm = ({ child, onSave, onCancel, onDelete }: any) => {
   const [name, setName] = useState(child?.name || '');
   const [avatar, setAvatar] = useState(child?.avatar || '👧');
   const [birthYear, setBirthYear] = useState(child?.birthYear || '');
+  const [dailyGoal, setDailyGoal] = useState(child?.dailyGoal || 15);
   const [levelCategory, setLevelCategory] = useState<LevelCategory>(child?.levelCategory || 'EXPLORERS');
   const [errors, setErrors] = useState<any>({});
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -279,7 +300,7 @@ const ChildForm = ({ child, onSave, onCancel, onDelete }: any) => {
       return;
     }
 
-    onSave({ id: child?.id, name, avatar, birthYear: parseInt(birthYear.toString()), levelCategory });
+    onSave({ id: child?.id, name, avatar, birthYear: parseInt(birthYear.toString()), dailyGoal, levelCategory });
   };
 
   return (
@@ -321,6 +342,7 @@ const ChildForm = ({ child, onSave, onCancel, onDelete }: any) => {
       <InputField label="Nome" value={name} onChange={setName} placeholder="Ex: Maria" error={errors.name} />
       <AvatarSelector selected={avatar} onChange={setAvatar} />
       <BirthYearSelect value={birthYear} onChange={setBirthYear} error={errors.birthYear} />
+      <DailyGoalSelect value={dailyGoal} onChange={setDailyGoal} />
       <LevelCategorySelector selected={levelCategory} onChange={setLevelCategory} />
 
       <div className="flex gap-3 mt-6">

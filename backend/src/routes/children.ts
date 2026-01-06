@@ -21,6 +21,7 @@ const updateChildSchema = z.object({
   avatar: z.string().max(10).optional(),
   birthYear: z.number().int().optional().nullable(),
   levelCategory: z.enum(['MAGIC', 'EXPLORERS', 'KNIGHTS', 'SPACE']).optional(),
+  dailyGoal: z.number().int().min(15).max(120).optional(),
 });
 
 // ============================================================================
@@ -188,7 +189,7 @@ childRoutes.get('/family/:familyId', async (c) => {
       const dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
       return {
         day: dayNames[d.getDay()],
-        status: dayMinutes > 0 ? (dayMinutes >= 15 ? 'success' : 'neutral') : 'fail', // >=15 min is success, <15 neutral, 0 fail
+        status: dayMinutes > 0 ? (dayMinutes >= child.dailyGoal || 0 ? 'success' : 'neutral') : 'fail',
         label: dayMinutes > 0 ? `${dayMinutes}m` : '✗'
       };
     });
@@ -224,7 +225,7 @@ childRoutes.get('/family/:familyId', async (c) => {
       streak, // Simplified
       todayReading: {
         minutes: todayMinutes,
-        goal: 15 // Hardcoded goal for now
+        goal: child.dailyGoal
       },
       weeklyActivity: weekSessions, // Mapped to expected format
       currentBooks,
@@ -260,6 +261,7 @@ childRoutes.get('/family/:familyId/list', async (c) => {
       avatar: true,
       birthYear: true,
       levelCategory: true,
+      dailyGoal: true,
     },
     orderBy: { createdAt: 'asc' },
   });
