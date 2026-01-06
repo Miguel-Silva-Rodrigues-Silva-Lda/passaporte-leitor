@@ -57,6 +57,7 @@ export interface Child {
   avatar: string;
   birthYear?: number;
   levelCategory?: LevelCategory;
+  dailyGoal: number;
   createdAt: string;
   updatedAt: string;
 

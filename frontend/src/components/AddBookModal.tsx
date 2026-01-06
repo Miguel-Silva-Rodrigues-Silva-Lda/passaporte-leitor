@@ -338,15 +338,15 @@ const Step3Review = ({ data, onChange, onNext, onBack }: any) => {
 // ============================================================================
 // STEP 4: READING SESSION
 // ============================================================================
-const Step4ReadingSession = ({ data, onChange, onSubmit, isLoading, onBack }: any) => {
+const Step4ReadingSession = ({ data, onChange, onSubmit, isLoading, onBack, dailyGoal }: any) => {
     return (
         <div className="space-y-6">
             <h2 className="text-lg font-bold text-gray-800 mb-4">⏱️ Registo de Leitura</h2>
 
             <TimeInput
-                value={data.readingMinutes || 15}
+                value={data.readingMinutes || dailyGoal}
                 onChange={(val) => onChange({ ...data, readingMinutes: val })}
-                dailyGoal={15}
+                dailyGoal={dailyGoal}
             />
 
             <MoodSelector
@@ -651,6 +651,7 @@ export function AddBookModal({ isOpen, onClose, child, onSuccess }: AddBookModal
                     onSubmit={handleStepNavigation}
                     isLoading={createReadingLogMutation.isPending}
                     onBack={() => setStep(3)}
+                    dailyGoal={child?.dailyGoal || 15}
                 />
             )}
 

@@ -363,7 +363,7 @@ const Step2SelectDate = ({ data, onChange, onNext, onBack }: StepProps) => {
 };
 
 // Step 3: Reading Session (Time + Mood + Page combined)
-const Step3ReadingSession = ({ data, onChange, onNext, onBack }: StepProps) => {
+const Step3ReadingSession = ({ data, onChange, onNext, onBack, dailyGoal }: StepProps & { dailyGoal: number }) => {
     const book = data.selectedBook;
 
     return (
@@ -385,9 +385,9 @@ const Step3ReadingSession = ({ data, onChange, onNext, onBack }: StepProps) => {
 
             {/* Time Input */}
             <TimeInput
-                value={data.minutes || 15}
+                value={data.minutes || dailyGoal}
                 onChange={(minutes) => onChange({ ...data, minutes })}
-                dailyGoal={15}
+                dailyGoal={dailyGoal}
             />
 
             {/* Mood Selector */}
@@ -720,6 +720,7 @@ export function LogReadingModal({ isOpen, onClose, child, currentBooks, onSucces
                     onChange={setSessionData}
                     onNext={goToStep4}
                     onBack={goToStep2}
+                    dailyGoal={child?.dailyGoal || 15}
                 />
             )}
 

@@ -106,6 +106,7 @@ export interface ChildListItem {
   avatar: string;
   birthYear: number | null;
   levelCategory: string;
+  dailyGoal: number;
 }
 
 export const childrenApi = {

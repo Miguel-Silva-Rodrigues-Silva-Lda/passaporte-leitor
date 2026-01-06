@@ -219,6 +219,12 @@ mapRoutes.get('/child/:childId', async (c) => {
 mapRoutes.get('/family/:familyId', async (c) => {
     const { familyId } = c.req.param();
 
+    // SECURITY: Verify authenticated user owns this family
+    const authFamilyId = getAuthFamilyId(c);
+    if (authFamilyId !== familyId) {
+        return c.json({ error: 'Forbidden - Access denied' }, 403);
+    }
+
     // Get family with children
     const family = await prisma.family.findUnique({
         where: { id: familyId },
