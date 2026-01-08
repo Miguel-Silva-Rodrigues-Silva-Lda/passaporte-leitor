@@ -8,6 +8,13 @@ import { AddBookModal } from '../components/AddBookModal';
 import { LogReadingModal } from '../components/LogReadingModal';
 import { ExplorerForm } from '../components/ExplorerForm';
 
+const STAT_CONFIG = [
+  { label: 'Total de Livros', key: 'books', icon: '📚', color: '#E67E22' },
+  { label: 'Exploradores', key: 'children', icon: '👨‍👩‍👧‍👦', color: '#3498DB' },
+  { label: 'Géneros Descobertos', key: 'genresDiscovered', icon: '🗺️', color: '#27AE60' },
+  { label: 'Conquistas', key: 'achievements', icon: '🏆', color: '#9B59B6' },
+] as const;
+
 export default function Dashboard() {
   const familyId = useFamilyId();
   const children = useChildren();
@@ -44,17 +51,12 @@ export default function Dashboard() {
 
       {/* Quick Stats */}
       <div className="grid grid-cols-4 gap-4 mb-8">
-        {[
-          { label: 'Total de Livros', value: familyStats?.totals.books || 0, icon: '📚', color: '#E67E22' },
-          { label: 'Exploradores', value: familyStats?.totals.children || 0, icon: '👨‍👩‍👧‍👦', color: '#3498DB' },
-          { label: 'Géneros Descobertos', value: familyStats?.totals.genresDiscovered || 0, icon: '🗺️', color: '#27AE60' },
-          { label: 'Conquistas', value: familyStats?.totals.achievements || 0, icon: '🏆', color: '#9B59B6' },
-        ].map((stat) => (
+        {STAT_CONFIG.map((stat) => (
           <Card key={stat.label}>
             <div className="flex items-center justify-between mb-2">
               <span className="text-2xl">{stat.icon}</span>
               <span className="text-2xl font-bold" style={{ color: stat.color }}>
-                {stat.value}
+                {familyStats?.totals[stat.key] ?? 0}
               </span>
             </div>
             <p className="text-sm text-gray-500">{stat.label}</p>
@@ -101,10 +103,11 @@ export default function Dashboard() {
         child={selectedChild}
         onSuccess={() => {
           queryClient.invalidateQueries({ queryKey: ['children', familyId] });
-          queryClient.invalidateQueries({ queryKey: ['familyBooks'] });
-          queryClient.invalidateQueries({ queryKey: ['familyStats'] });
-          queryClient.invalidateQueries({ queryKey: ['reading-sessions'] });
-          queryClient.invalidateQueries({ queryKey: ['reading-sessions-stats'] });
+          queryClient.invalidateQueries({
+            predicate: (query) =>
+              ['familyBooks', 'familyStats', 'reading-sessions', 'reading-sessions-stats']
+                .some(key => query.queryKey.includes(key))
+          });
           triggerConfetti();
         }}
       />
@@ -117,9 +120,11 @@ export default function Dashboard() {
         currentBooks={selectedChild?.currentBooks || []}
         onSuccess={() => {
           queryClient.invalidateQueries({ queryKey: ['children', familyId] });
-          queryClient.invalidateQueries({ queryKey: ['familyStats'] });
-          queryClient.invalidateQueries({ queryKey: ['reading-sessions'] });
-          queryClient.invalidateQueries({ queryKey: ['reading-sessions-stats'] });
+          queryClient.invalidateQueries({
+            predicate: (query) =>
+              ['familyStats', 'reading-sessions', 'reading-sessions-stats']
+                .some(key => query.queryKey.includes(key))
+          });
         }}
       />
 
