@@ -330,7 +330,7 @@ export default function AuthPage() {
         setToken(data.token);
         if (data.family) setFamily(data.family);
         // Redirect to dashboard
-        navigate('/');
+        navigate('/dashboard');
     };
 
     return (

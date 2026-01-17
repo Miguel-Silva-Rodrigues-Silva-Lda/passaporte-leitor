@@ -12,7 +12,7 @@ export default function Layout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const navItems = [
-    { to: '/', icon: '🏠', label: 'Início' },
+    { to: '/dashboard', icon: '🏠', label: 'Início' },
     { to: '/mapa', icon: '🗺️', label: 'Mapa' },
     { to: '/livros', icon: '📚', label: 'Livros' },
     { to: '/leituras', icon: '📖', label: 'Leituras' },
@@ -104,7 +104,7 @@ export default function Layout() {
             <NavLink
               key={item.to}
               to={item.to}
-              end={item.to === '/'}
+              end={item.to === '/dashboard'}
               onClick={() => setIsSidebarOpen(false)}
               className={({ isActive }) =>
                 clsx(
@@ -161,7 +161,7 @@ export default function Layout() {
             <NavLink
               key={item.to}
               to={item.to}
-              end={item.to === '/'}
+              end={item.to === '/dashboard'}
               className={({ isActive }) =>
                 clsx(
                   'flex flex-col items-center gap-1 px-3 py-2 rounded-lg min-w-[60px]',

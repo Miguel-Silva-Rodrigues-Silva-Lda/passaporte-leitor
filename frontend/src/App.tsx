@@ -10,6 +10,7 @@ import Confetti from './components/Confetti';
 import LoadingScreen from './components/LoadingScreen';
 
 // Lazy-loaded pages (code splitting)
+const Landing = lazy(() => import('./pages/Landing'));
 const AuthPage = lazy(() => import('./pages/Auth'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Books = lazy(() => import('./pages/Books'));
@@ -66,8 +67,9 @@ export default function App() {
     return (
       <Suspense fallback={<LoadingScreen />}>
         <Routes>
+          <Route path="/" element={<Landing />} />
           <Route path="/auth" element={<AuthPage />} />
-          <Route path="*" element={<Navigate to="/auth" replace />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>
     );
@@ -78,6 +80,7 @@ export default function App() {
     return (
       <Suspense fallback={<LoadingScreen />}>
         <Routes>
+          <Route path="/" element={<Landing />} />
           <Route path="/auth" element={<AuthPage />} />
           <Route path="*" element={<Navigate to="/auth" replace />} />
         </Routes>
@@ -105,17 +108,18 @@ export default function App() {
     <>
       <Suspense fallback={<LoadingScreen />}>
         <Routes>
-          <Route path="/" element={<Layout />}>
-            <Route index element={<Dashboard />} />
-            <Route path="livros" element={<Books />} />
-            <Route path="leituras" element={<ReadingSessions />} />
-            <Route path="mapa" element={<MapPage />} />
-            <Route path="conquistas" element={<AchievementsPage />} />
-            <Route path="imprimir" element={<PrintPage />} />
-            <Route path="definicoes" element={<Settings />} />
+          <Route path="/" element={<Landing />} />
+          <Route element={<Layout />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/livros" element={<Books />} />
+            <Route path="/leituras" element={<ReadingSessions />} />
+            <Route path="/mapa" element={<MapPage />} />
+            <Route path="/conquistas" element={<AchievementsPage />} />
+            <Route path="/imprimir" element={<PrintPage />} />
+            <Route path="/definicoes" element={<Settings />} />
           </Route>
-          <Route path="auth" element={<Navigate to="/" replace />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="/auth" element={<Navigate to="/dashboard" replace />} />
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </Suspense>
       <Confetti active={showConfetti} />
