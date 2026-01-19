@@ -19,6 +19,8 @@ const MapPage = lazy(() => import('./pages/Map'));
 const AchievementsPage = lazy(() => import('./pages/Achievements'));
 const PrintPage = lazy(() => import('./pages/Print'));
 const Settings = lazy(() => import('./pages/Settings'));
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
+const CookiesPolicy = lazy(() => import('./pages/CookiesPolicy'));
 
 export default function App() {
   const isOnboardingComplete = useIsOnboardingComplete();
@@ -69,6 +71,8 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/auth" element={<AuthPage />} />
+          <Route path="/privacidade" element={<PrivacyPolicy />} />
+          <Route path="/cookies" element={<CookiesPolicy />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>
@@ -82,6 +86,8 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/auth" element={<AuthPage />} />
+          <Route path="/privacidade" element={<PrivacyPolicy />} />
+          <Route path="/cookies" element={<CookiesPolicy />} />
           <Route path="*" element={<Navigate to="/auth" replace />} />
         </Routes>
       </Suspense>
@@ -109,6 +115,8 @@ export default function App() {
       <Suspense fallback={<LoadingScreen />}>
         <Routes>
           <Route path="/" element={<Landing />} />
+          <Route path="/privacidade" element={<PrivacyPolicy />} />
+          <Route path="/cookies" element={<CookiesPolicy />} />
           <Route element={<Layout />}>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/livros" element={<Books />} />

@@ -1334,8 +1334,8 @@ export default function Landing() {
                 <ul className="footer-links">
                   <li><a href="#">Sobre Nós</a></li>
                   <li><a href="#contacto">Contacto</a></li>
-                  <li><a href="#">Política de Privacidade</a></li>
-                  <li><a href="#">Termos de Uso</a></li>
+                  <li><a href="/privacidade">Política de Privacidade</a></li>
+                  <li><a href="/cookies">Política de Cookies</a></li>
                 </ul>
               </div>
             </div>
