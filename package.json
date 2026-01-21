@@ -1,7 +1,7 @@
 {
   "name": "passaporte-leitor",
   "version": "1.0.0",
-  "description": "Passaporte do Leitor - App de leitura gamificada para crianças",
+  "description": "Passaporte do Leitor - App de leitura gamificada para criancas",
   "private": true,
   "scripts": {
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",

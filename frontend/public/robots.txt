@@ -1,0 +1,7 @@
+# Robots.txt for vamosler.pt
+
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://vamosler.pt/sitemap.xml

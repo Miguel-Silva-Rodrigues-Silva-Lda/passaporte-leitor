@@ -2,7 +2,7 @@
   "$schema": "https://railway.app/railway.schema.json",
   "build": {
     "builder": "RAILPACK",
-    "buildCommand": "npm install --prefer-offline --no-audit --cache /tmp/.npm && npm run build"
+    "buildCommand": "npm install --prefer-offline --no-audit --cache /tmp/.npm && npm run build:prerender"
   },
   "deploy": {
     "startCommand": "npm start",

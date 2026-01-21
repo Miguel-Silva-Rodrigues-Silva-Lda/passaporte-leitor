@@ -1,10 +1,17 @@
 import LandingHeader from '../components/LandingHeader';
 import LandingFooter from '../components/LandingFooter';
 import LandingStyles from '../components/LandingStyles';
+import { PageMeta } from '../components/PageMeta';
 
 export default function Landing() {
   return (
     <>
+      <PageMeta
+        title="Passaporte do Leitor"
+        description="O Passaporte do Leitor motiva crianças dos 6 aos 12 anos a desenvolver o hábito da leitura através de streaks, metas diárias e acompanhamento familiar. 100% gratuito!"
+        ogUrl="https://vamosler.pt"
+        keywords="leitura, crianças, hábito de leitura, gamificação, educação, livros, portugal, streaks, metas de leitura"
+      />
       <LandingStyles />
       <style>{`
         /* ============================================

@@ -1,10 +1,16 @@
 import LandingHeader from '../components/LandingHeader';
 import LandingFooter from '../components/LandingFooter';
 import LandingStyles from '../components/LandingStyles';
+import { PageMeta } from '../components/PageMeta';
 
 export default function CookiesPolicy() {
   return (
     <>
+      <PageMeta
+        title="Política de Cookies"
+        description="Política de Cookies do Passaporte do Leitor. Saiba como utilizamos cookies para garantir uma melhor experiência de utilizador."
+        ogUrl="https://vamosler.pt/cookies"
+      />
       <LandingStyles />
 
       <div className="landing-page">

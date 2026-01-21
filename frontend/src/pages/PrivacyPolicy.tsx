@@ -1,10 +1,16 @@
 import LandingHeader from '../components/LandingHeader';
 import LandingFooter from '../components/LandingFooter';
 import LandingStyles from '../components/LandingStyles';
+import { PageMeta } from '../components/PageMeta';
 
 export default function PrivacyPolicy() {
   return (
     <>
+      <PageMeta
+        title="Política de Privacidade"
+        description="Política de Privacidade do Passaporte do Leitor. Saiba como recolhemos, utilizamos e protegemos os seus dados pessoais em conformidade com o RGPD."
+        ogUrl="https://vamosler.pt/privacidade"
+      />
       <LandingStyles />
 
       <div className="landing-page">
