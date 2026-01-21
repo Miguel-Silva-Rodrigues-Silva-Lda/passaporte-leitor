@@ -10,7 +10,6 @@ import Confetti from './components/Confetti';
 import LoadingScreen from './components/LoadingScreen';
 
 // Lazy-loaded pages (code splitting)
-const Landing = lazy(() => import('./pages/Landing'));
 const AuthPage = lazy(() => import('./pages/Auth'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Books = lazy(() => import('./pages/Books'));
@@ -19,8 +18,6 @@ const MapPage = lazy(() => import('./pages/Map'));
 const AchievementsPage = lazy(() => import('./pages/Achievements'));
 const PrintPage = lazy(() => import('./pages/Print'));
 const Settings = lazy(() => import('./pages/Settings'));
-const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
-const CookiesPolicy = lazy(() => import('./pages/CookiesPolicy'));
 
 export default function App() {
   const isOnboardingComplete = useIsOnboardingComplete();
@@ -64,16 +61,13 @@ export default function App() {
   // Check for auth token - this is the primary authentication check
   const hasToken = !!localStorage.getItem('authToken');
 
-  // Redirect to auth if no token, regardless of onboarding state
+  // Redirect to auth if no token
   if (!hasToken) {
     return (
       <Suspense fallback={<LoadingScreen />}>
         <Routes>
-          <Route path="/" element={<Landing />} />
           <Route path="/auth" element={<AuthPage />} />
-          <Route path="/privacidade" element={<PrivacyPolicy />} />
-          <Route path="/cookies" element={<CookiesPolicy />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<Navigate to="/auth" replace />} />
         </Routes>
       </Suspense>
     );
@@ -84,10 +78,7 @@ export default function App() {
     return (
       <Suspense fallback={<LoadingScreen />}>
         <Routes>
-          <Route path="/" element={<Landing />} />
           <Route path="/auth" element={<AuthPage />} />
-          <Route path="/privacidade" element={<PrivacyPolicy />} />
-          <Route path="/cookies" element={<CookiesPolicy />} />
           <Route path="*" element={<Navigate to="/auth" replace />} />
         </Routes>
       </Suspense>
@@ -114,10 +105,8 @@ export default function App() {
     <>
       <Suspense fallback={<LoadingScreen />}>
         <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route path="/privacidade" element={<PrivacyPolicy />} />
-          <Route path="/cookies" element={<CookiesPolicy />} />
           <Route element={<Layout />}>
+            <Route path="/" element={<Dashboard />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/livros" element={<Books />} />
             <Route path="/leituras" element={<ReadingSessions />} />
@@ -126,8 +115,8 @@ export default function App() {
             <Route path="/imprimir" element={<PrintPage />} />
             <Route path="/definicoes" element={<Settings />} />
           </Route>
-          <Route path="/auth" element={<Navigate to="/dashboard" replace />} />
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/auth" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>
       <Confetti active={showConfetti} />
