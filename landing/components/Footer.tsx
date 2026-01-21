@@ -8,9 +8,9 @@ export default function Footer() {
           <div className="footer-brand">
             <div className="footer-logo">
               <span>📚</span>
-              <span>Passaporte do Leitor</span>
+              <span>Vamos Ler</span>
             </div>
-            <p>Transformar a leitura numa aventura para crianças dos 6 aos 12 anos.</p>
+            <p>Cria o hábito de leitura nas crianças dos 6 aos 12 anos — sem stress.</p>
           </div>
 
           <div className="footer-column">
@@ -35,7 +35,7 @@ export default function Footer() {
 
         <div className="footer-bottom">
           <p className="footer-copyright">
-            © {new Date().getFullYear()} Passaporte do Leitor. Todos os direitos reservados.
+            © {new Date().getFullYear()} Vamos Ler. Todos os direitos reservados.
           </p>
         </div>
       </div>

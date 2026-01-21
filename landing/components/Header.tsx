@@ -9,7 +9,7 @@ export default function Header() {
         <nav>
           <Link href="/" className="logo">
             <span className="logo-icon">📚</span>
-            <span>Passaporte do Leitor</span>
+            <span>Vamos Ler</span>
           </Link>
 
           <ul className="nav-links">

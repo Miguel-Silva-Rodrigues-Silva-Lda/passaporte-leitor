@@ -18,11 +18,11 @@ export default function Home() {
                 <span>Em fase de testes — 100% gratuito!</span>
               </div>
 
-              <h1>Transformar a <span>Leitura</span> numa Aventura</h1>
+              <h1>Cria o Hábito de <span>Leitura</span> nas Crianças — Sem Stress</h1>
 
               <p className="hero-description">
-                O Passaporte do Leitor motiva crianças dos 6 aos 12 anos a desenvolver o hábito da leitura através de
-                streaks, metas diárias e acompanhamento familiar.
+                O Vamos Ler motiva crianças dos 6 aos 12 anos a ler todos os dias através de
+                streaks, metas personalizadas e o Passaporte do Leitor.
               </p>
 
               <div className="hero-buttons">
@@ -185,7 +185,7 @@ export default function Home() {
 
             <div className="split-text">
               <h2>Para Pais e Famílias</h2>
-              <p>O Passaporte do Leitor foi desenhado para tornar a leitura um momento especial em família, sem stress e com
+              <p>O Vamos Ler foi desenhado para tornar a leitura um momento especial em família, sem stress e com
                 muita diversão.</p>
 
               <ul className="benefit-list">
@@ -230,7 +230,7 @@ export default function Home() {
 
             <div className="split-text">
               <h2>Para Escolas e Bibliotecas</h2>
-              <p>Leve o Passaporte do Leitor para a sua escola e transforme a cultura de leitura com dados concretos e
+              <p>Leve o Vamos Ler para a sua escola e transforme a cultura de leitura com dados concretos e
                 motivação gamificada.</p>
 
               <ul className="benefit-list">

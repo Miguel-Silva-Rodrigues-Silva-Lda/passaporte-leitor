@@ -2,24 +2,24 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Passaporte do Leitor - Transformar a Leitura numa Aventura",
-  description: "O Passaporte do Leitor motiva crianças dos 6 aos 12 anos a desenvolver o hábito da leitura através de streaks, metas diárias e acompanhamento familiar. 100% gratuito!",
-  keywords: "leitura, crianças, hábito de leitura, gamificação, educação, livros, portugal, streaks, metas de leitura, leitura infantil",
-  authors: [{ name: "Passaporte do Leitor" }],
+  title: "Vamos Ler - Leitura Gamificada para Crianças dos 6 aos 12 Anos",
+  description: "Cria o hábito de leitura sem stress! O Vamos Ler motiva crianças com streaks, metas diárias e o Passaporte do Leitor. Gratuito para famílias e escolas.",
+  keywords: "leitura, crianças, hábito de leitura, gamificação, educação, livros, portugal, streaks, metas de leitura, leitura infantil, vamos ler",
+  authors: [{ name: "Vamos Ler" }],
   robots: "index, follow",
   openGraph: {
     type: "website",
     url: "https://vamosler.pt/",
-    title: "Passaporte do Leitor - Transformar a Leitura numa Aventura",
-    description: "O Passaporte do Leitor motiva crianças dos 6 aos 12 anos a desenvolver o hábito da leitura através de streaks, metas diárias e acompanhamento familiar.",
+    title: "Vamos Ler - Leitura Gamificada para Crianças dos 6 aos 12 Anos",
+    description: "Cria o hábito de leitura sem stress! O Vamos Ler motiva crianças com streaks, metas diárias e o Passaporte do Leitor. Gratuito para famílias e escolas.",
     images: [{ url: "https://vamosler.pt/og-image.png" }],
-    siteName: "Passaporte do Leitor",
+    siteName: "Vamos Ler",
     locale: "pt_PT",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Passaporte do Leitor - Transformar a Leitura numa Aventura",
-    description: "Motiva crianças dos 6 aos 12 anos a desenvolver o hábito da leitura através de streaks e metas diárias.",
+    title: "Vamos Ler - Leitura Gamificada para Crianças dos 6 aos 12 Anos",
+    description: "Cria o hábito de leitura sem stress! O Vamos Ler motiva crianças com streaks, metas diárias e o Passaporte do Leitor.",
     images: ["https://vamosler.pt/og-image.png"],
   },
   alternates: {
