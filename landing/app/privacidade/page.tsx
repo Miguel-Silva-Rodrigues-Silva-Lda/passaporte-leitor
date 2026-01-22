@@ -3,8 +3,8 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 
 export const metadata: Metadata = {
-  title: 'Política de Privacidade | Passaporte do Leitor',
-  description: 'Política de Privacidade do Passaporte do Leitor. Saiba como recolhemos, utilizamos e protegemos os seus dados pessoais em conformidade com o RGPD.',
+  title: 'Política de Privacidade | Vamos Ler',
+  description: 'Política de Privacidade do Vamos Ler. Saiba como recolhemos, utilizamos e protegemos os seus dados pessoais em conformidade com o RGPD.',
   alternates: {
     canonical: 'https://vamosler.pt/privacidade',
   },
@@ -32,7 +32,7 @@ export default function PrivacyPolicy() {
 
             <h2>2. Dados Pessoais Recolhidos</h2>
             <p>
-              No âmbito do registo e utilização da plataforma Vamos Ler, recolhemos os seguintes dados pessoais: endereço de email, nome da família e nome do familiar. Estes dados são fornecidos diretamente pelo utilizador aquando do registo na plataforma.
+              No âmbito do registo e utilização da plataforma Vamos Ler, recolhemos os seguintes dados pessoais: endereço de email, nome da família e nome do familiar. Estes dados são fornecidos diretamente pelo utilizador aquando do registo na plataforma. Adicionalmente, no âmbito da utilização da plataforma, são registados dados de atividade como: tempo de leitura, livros adicionados à biblioteca pessoal, metas e progresso de leitura. Estes dados são associados ao perfil da criança, criado e gerido pelo adulto responsável.
             </p>
 
             <h2>3. Finalidades do Tratamento</h2>
@@ -47,7 +47,7 @@ export default function PrivacyPolicy() {
 
             <h2>5. Dados de Menores</h2>
             <p>
-              A plataforma Vamos Ler destina-se a ser utilizada por crianças sob supervisão de adultos. O registo na plataforma é efetuado exclusivamente por adultos (pais ou encarregados de educação), sendo estes responsáveis por supervisionar o acesso e utilização da plataforma pelos menores a seu cargo. Não recolhemos conscientemente dados pessoais diretamente de menores de 13 anos.
+              A plataforma Vamos Ler destina-se a ser utilizada por crianças sob supervisão de adultos. O registo na plataforma é efetuado exclusivamente por adultos (pais ou encarregados de educação), sendo estes responsáveis por supervisionar o acesso e utilização da plataforma pelos menores a seu cargo. Não recolhemos dados pessoais diretamente de menores. Todos os dados são fornecidos e geridos pelo adulto responsável (pai, mãe ou encarregado de educação), que cria e supervisiona os perfis das crianças.
             </p>
 
             <h2>6. Conservação dos Dados</h2>

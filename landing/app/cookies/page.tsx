@@ -3,8 +3,8 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 
 export const metadata: Metadata = {
-  title: 'Política de Cookies | Passaporte do Leitor',
-  description: 'Política de Cookies do Passaporte do Leitor. Saiba como utilizamos cookies para garantir uma melhor experiência de utilizador.',
+  title: 'Política de Cookies | Vamos Ler',
+  description: 'Política de Cookies do Vamos Ler. Saiba como utilizamos cookies para garantir uma melhor experiência de utilizador.',
   alternates: {
     canonical: 'https://vamosler.pt/cookies',
   },
