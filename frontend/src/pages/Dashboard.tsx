@@ -45,7 +45,7 @@ export default function Dashboard() {
           Olá! 👋
         </h1>
         <p className="text-gray-500">
-          Acompanhem as aventuras literárias da família.
+          Acompanhem as aventuras literárias da família. 
         </p>
       </div>
 
