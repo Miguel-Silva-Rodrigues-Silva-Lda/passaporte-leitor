@@ -23,7 +23,7 @@ export default function App() {
   const isOnboardingComplete = useIsOnboardingComplete();
   const familyId = useFamilyId();
   const showConfetti = useShowConfetti();
-  const { setFamily, setChildren, logout } = useStore();
+  const { setFamily, setChildren, reset } = useStore();
 
   // Fetch family data if we have an ID
   const { data: familyData, isLoading: familyLoading, error: familyError } = useQuery({
@@ -49,12 +49,12 @@ export default function App() {
     if (childrenData) setChildren(childrenData);
   }, [childrenData, setChildren]);
 
-  // Handle logout on family fetch error (e.g., 401 unauthorized)
+  // Handle auth error on family fetch (e.g., 401 unauthorized)
   useEffect(() => {
     if (familyError) {
-      logout();
+      reset();
     }
-  }, [familyError, logout]);
+  }, [familyError, reset]);
 
   const isLoading = familyLoading || childrenLoading;
 

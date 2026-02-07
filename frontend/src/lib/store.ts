@@ -112,7 +112,7 @@ export const useStore = create<AppState>()(
       logout: () => {
         localStorage.removeItem('authToken');
         set(initialState);
-        window.location.href = 'https://www.vamosler.pt//';
+        window.location.href = 'https://www.vamosler.pt/';
       },
     }),
     {
