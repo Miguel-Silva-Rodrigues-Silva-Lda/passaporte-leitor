@@ -1,5 +1,5 @@
 import { useEffect, lazy, Suspense } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useStore, useIsOnboardingComplete, useFamilyId, useShowConfetti } from './lib/store';
 import { familyApi, childrenApi } from './lib/api';
@@ -20,24 +20,31 @@ const PrintPage = lazy(() => import('./pages/Print'));
 const Settings = lazy(() => import('./pages/Settings'));
 
 export default function App() {
+  const location = useLocation();
   const isOnboardingComplete = useIsOnboardingComplete();
   const familyId = useFamilyId();
   const showConfetti = useShowConfetti();
-  const { setFamily, setChildren, reset } = useStore();
+  const { setFamily, setChildren, logout } = useStore();
+
+  const isAuthPage = location.pathname === '/auth';
+  const hasToken = !!localStorage.getItem('authToken');
+
+  // Only fetch data when authenticated and not on auth page
+  const shouldFetchData = !!familyId && isOnboardingComplete && hasToken && !isAuthPage;
 
   // Fetch family data if we have an ID
   const { data: familyData, isLoading: familyLoading, error: familyError } = useQuery({
     queryKey: ['family', familyId],
     queryFn: () => familyApi.get(familyId!),
-    enabled: !!familyId && isOnboardingComplete,
-    retry: 1, // Only retry once to avoid long waits on auth errors
+    enabled: shouldFetchData,
+    retry: 1,
   });
 
   // Fetch children
   const { data: childrenData, isLoading: childrenLoading } = useQuery({
     queryKey: ['children', familyId],
     queryFn: () => childrenApi.getByFamily(familyId!),
-    enabled: !!familyId && isOnboardingComplete,
+    enabled: shouldFetchData,
     retry: 1,
   });
 
@@ -52,16 +59,13 @@ export default function App() {
   // Handle auth error on family fetch (e.g., 401 unauthorized)
   useEffect(() => {
     if (familyError) {
-      reset();
+      logout();
     }
-  }, [familyError, reset]);
+  }, [familyError, logout]);
 
   const isLoading = familyLoading || childrenLoading;
 
-  // Check for auth token - this is the primary authentication check
-  const hasToken = !!localStorage.getItem('authToken');
-
-  // Redirect to auth if no token
+  // /auth is always accessible without token
   if (!hasToken) {
     return (
       <Suspense fallback={<LoadingScreen />}>
@@ -86,7 +90,6 @@ export default function App() {
   }
 
   // If familyId missing but has token and onboarding complete, show loading
-  // This handles the brief moment after login before state is fully synced
   if (!familyId) {
     return <LoadingScreen />;
   }

@@ -42,6 +42,7 @@ async function request<T>(endpoint: string, options?: RequestInit): Promise<T> {
     // Handle token expiration - redirect to auth page
     if (response.status === 401) {
       localStorage.removeItem('authToken');
+      window.location.href = 'https://www.vamosler.pt/';
     }
     const error = await response.json().catch(() => ({ error: 'Unknown error' }));
     throw new ApiError(response.status, error.error || 'Request failed');
