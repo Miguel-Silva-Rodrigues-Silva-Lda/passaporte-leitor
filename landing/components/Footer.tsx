@@ -16,9 +16,9 @@ export default function Footer() {
           <div className="footer-column">
             <h4>Produto</h4>
             <ul className="footer-links">
-              <li><Link href="#funcionalidades">Funcionalidades</Link></li>
-              <li><Link href="#pais">Para Pais</Link></li>
-              <li><Link href="#escolas">Para Escolas</Link></li>
+              <li><Link href="/#funcionalidades">Funcionalidades</Link></li>
+              <li><Link href="/#pais">Para Pais</Link></li>
+              <li><Link href="/#escolas">Para Escolas</Link></li>
               <li><Link href="/artigos">Artigos</Link></li>
             </ul>
           </div>
@@ -27,7 +27,7 @@ export default function Footer() {
             <h4>Empresa</h4>
             <ul className="footer-links">
               <li><Link href="#">Sobre Nós</Link></li>
-              <li><Link href="#contacto">Contacto</Link></li>
+              <li><Link href="/#contacto">Contacto</Link></li>
               <li><Link href="/privacidade">Política de Privacidade</Link></li>
               <li><Link href="/cookies">Política de Cookies</Link></li>
             </ul>

@@ -20,10 +20,11 @@ export default function Header() {
           </Link>
 
           <ul className={`nav-links ${isMenuOpen ? 'nav-links-open' : ''}`}>
-            <li><Link href="#funcionalidades" onClick={closeMenu}>Funcionalidades</Link></li>
-            <li><Link href="#pais" onClick={closeMenu}>Para Pais</Link></li>
-            <li><Link href="#escolas" onClick={closeMenu}>Para Escolas</Link></li>
-            <li><Link href="#contacto" onClick={closeMenu}>Contacto</Link></li>
+            <li><Link href="/#funcionalidades" onClick={closeMenu}>Funcionalidades</Link></li>
+            <li><Link href="/#pais" onClick={closeMenu}>Para Pais</Link></li>
+            <li><Link href="/#escolas" onClick={closeMenu}>Para Escolas</Link></li>
+            <li><Link href="/artigos" onClick={closeMenu}>Artigos</Link></li>
+            <li><Link href="/#contacto" onClick={closeMenu}>Contacto</Link></li>
             <li className="mobile-cta">
               <a href={`${APP_URL}/auth`} className="btn btn-secondary">Entrar</a>
               <a href={`${APP_URL}/auth`} className="btn btn-primary">Começar Grátis</a>
