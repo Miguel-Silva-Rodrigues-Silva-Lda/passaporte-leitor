@@ -19,6 +19,7 @@ export default function Footer() {
               <li><Link href="#funcionalidades">Funcionalidades</Link></li>
               <li><Link href="#pais">Para Pais</Link></li>
               <li><Link href="#escolas">Para Escolas</Link></li>
+              <li><Link href="/artigos">Artigos</Link></li>
             </ul>
           </div>
 

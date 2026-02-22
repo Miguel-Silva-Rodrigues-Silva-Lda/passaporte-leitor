@@ -1,9 +1,21 @@
+import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { getAllArticles } from '@/lib/articles';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://app.vamosler.pt';
 
+function formatDate(dateStr: string): string {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('pt-PT', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+}
+
 export default function Home() {
+  const articles = getAllArticles();
   return (
     <>
       <Header />
@@ -304,6 +316,39 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Articles Section */}
+      {articles.length > 0 && (
+        <section className="articles-section" id="artigos">
+          <div className="container">
+            <div className="section-header">
+              <h2>Artigos para Pais</h2>
+              <p>Dicas práticas e guias para criar o hábito de leitura em família.</p>
+            </div>
+
+            <div className="articles-grid">
+              {articles.slice(0, 3).map(article => (
+                <Link key={article.slug} href={`/artigos/${article.slug}`} className="article-card">
+                  <div className="article-card-content">
+                    <span className="article-card-date">{formatDate(article.date)}</span>
+                    <h3>{article.title}</h3>
+                    <p>{article.description}</p>
+                    <span className="article-card-link">Ler artigo →</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+
+            {articles.length > 3 && (
+              <div style={{ textAlign: 'center', marginTop: '40px' }}>
+                <Link href="/artigos" className="btn btn-secondary">
+                  <span>Ver todos os artigos</span>
+                </Link>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* Contact Section */}
       <section className="contact" id="contacto">
