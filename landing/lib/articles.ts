@@ -11,6 +11,16 @@ export interface Article {
 
 const articlesDirectory = path.join(process.cwd(), 'content/artigos');
 
+function normalizeDateOrFallback(dateStr: string | undefined, fallback: Date): string {
+  if (dateStr && dateStr.trim()) {
+    const parsed = new Date(dateStr);
+    if (!Number.isNaN(parsed.getTime())) {
+      return dateStr;
+    }
+  }
+  return fallback.toISOString();
+}
+
 function parseFrontmatter(fileContent: string): { data: Record<string, string>; content: string } {
   const frontmatterRegex = /^---\s*\n([\s\S]*?)\n---\s*\n([\s\S]*)$/;
   const match = fileContent.match(frontmatterRegex);
@@ -68,17 +78,19 @@ export function getAllArticles(): Article[] {
     const filePath = path.join(articlesDirectory, filename);
     const fileContent = fs.readFileSync(filePath, 'utf-8');
     const { data, content } = parseFrontmatter(fileContent);
+    const stats = fs.statSync(filePath);
+    const date = normalizeDateOrFallback(data.date, stats.mtime);
 
     return {
       slug,
       title: data.title || slug,
       description: data.description || '',
-      date: data.date || '',
+      date,
       content: markdownToHtml(content),
     };
   });
 
-  return articles.sort((a, b) => (a.date > b.date ? -1 : 1));
+  return articles.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 }
 
 export function getArticleBySlug(slug: string): Article | null {
@@ -86,14 +98,16 @@ export function getArticleBySlug(slug: string): Article | null {
 
   if (!fs.existsSync(filePath)) return null;
 
+  const stats = fs.statSync(filePath);
   const fileContent = fs.readFileSync(filePath, 'utf-8');
   const { data, content } = parseFrontmatter(fileContent);
+  const date = normalizeDateOrFallback(data.date, stats.mtime);
 
   return {
     slug,
     title: data.title || slug,
     description: data.description || '',
-    date: data.date || '',
+    date,
     content: markdownToHtml(content),
   };
 }
