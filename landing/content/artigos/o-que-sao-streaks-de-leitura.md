@@ -1,10 +1,10 @@
 ---
-title: "O que são as \"streaks\" de leitura e por que é que funcionam?"
+title: 'O que são as "streaks" de leitura e por que é que funcionam?'
 description: "O que é uma streak de leitura, por que motiva as crianças e como ajuda a criar o hábito de ler todos os dias."
 date: "2026-02-23"
 ---
 
-# O que são as "streaks" de leitura e por que é que funcionam?
+## O que são as "streaks" de leitura e por que é que funcionam?
 
 Se os seus filhos já usam apps ou jogos no tablet, é provável que conheçam o conceito: uma streak (ou sequência) é o número de dias seguidos em que se faz alguma coisa. No Vamos Ler, é o número de dias consecutivos em que a criança dedicou tempo a ler.
 
