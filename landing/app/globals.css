@@ -297,6 +297,21 @@ footer {
   font-size: 0.95rem;
 }
 
+.footer-instagram {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9rem;
+  text-decoration: none;
+  transition: color 0.3s;
+}
+
+.footer-instagram:hover {
+  color: var(--color-primary);
+}
+
 .footer-column h4 {
   font-size: 1rem;
   margin-bottom: 20px;
