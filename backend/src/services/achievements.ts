@@ -1,5 +1,6 @@
 import prisma from '../lib/prisma.js';
 import { Genre } from '@prisma/client';
+import { calculateStreak } from '../lib/streak.js';
 
 interface AchievementRequirement {
   type: string;
@@ -16,6 +17,15 @@ export async function checkAndAwardAchievements(childId: string) {
   const books = await prisma.book.findMany({
     where: { childId },
   });
+
+  // Obter sessões de leitura (para conquistas de streak/tempo/sessões)
+  const sessions = await prisma.readingSession.findMany({
+    where: { childId },
+    select: { date: true, minutes: true },
+    orderBy: { date: 'desc' },
+  });
+
+  const finishedBooks = books.filter((b: any) => b.status === 'FINISHED');
 
   // Obter conquistas já obtidas
   const existingAchievements = await prisma.childAchievement.findMany({
@@ -39,7 +49,7 @@ export async function checkAndAwardAchievements(childId: string) {
 
     switch (requirements.type) {
       case 'book_count':
-        earned = books.length >= requirements.value;
+        earned = finishedBooks.length >= requirements.value;
         break;
 
       case 'genre_count':
@@ -65,6 +75,31 @@ export async function checkAndAwardAchievements(childId: string) {
           return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
         });
         earned = thisMonthBooks.length >= requirements.value;
+        break;
+
+      case 'streak_days':
+        const streak = await calculateStreak(childId, sessions);
+        earned = streak >= requirements.value;
+        break;
+
+      case 'total_minutes':
+        const totalMinutes = sessions.reduce((sum, s) => sum + s.minutes, 0);
+        earned = totalMinutes >= requirements.value;
+        break;
+
+      case 'session_count':
+        earned = sessions.length >= requirements.value;
+        break;
+
+      case 'reading_days':
+        const uniqueDays = new Set(
+          sessions.map((s) => {
+            const d = new Date(s.date);
+            d.setHours(0, 0, 0, 0);
+            return d.toISOString().split('T')[0];
+          })
+        );
+        earned = uniqueDays.size >= requirements.value;
         break;
     }
 

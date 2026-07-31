@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { BookStatus } from '@prisma/client';
 import prisma from '../lib/prisma.js';
 import { verifyFamilyParam, verifyChildOwnership, verifySessionOwnership } from '../middleware/authorization.js';
+import { checkAndAwardAchievements } from '../services/achievements.js';
 
 export const readingLogRoutes = new Hono();
 
@@ -94,7 +95,10 @@ readingLogRoutes.post('/', async (c) => {
         });
     }
 
-    return c.json(session, 201);
+    // Verificar conquistas (streaks, minutos, sessões, livros terminados)
+    const newAchievements = await checkAndAwardAchievements(childId);
+
+    return c.json({ ...session, newAchievements }, 201);
 });
 
 // ============================================================================
