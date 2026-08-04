@@ -634,8 +634,11 @@ export function AddBookModal({ isOpen, onClose, child, onSuccess }: AddBookModal
         const result = await createChildBookMutation.mutateAsync(buildCreatePayload());
         const childBookId = result.childBook.id;
         setBookData((prev) => ({ ...prev, childBookId }));
-        // Invalidate immediately so cards update even if the modal is closed
+        // Invalidate immediately so cards + library + catalog update even if the modal closes
         queryClient.invalidateQueries({ queryKey: ['children'] });
+        queryClient.invalidateQueries({ queryKey: ['library'] });
+        queryClient.invalidateQueries({ queryKey: ['childBooks'] });
+        queryClient.invalidateQueries({ queryKey: ['familyStats'] });
         return childBookId;
     };
 
