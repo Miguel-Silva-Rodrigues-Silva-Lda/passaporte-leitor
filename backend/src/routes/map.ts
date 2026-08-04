@@ -127,7 +127,7 @@ mapRoutes.get('/child/:childId', async (c) => {
             familyId: familyId, // Critical: Ensure child belongs to this family
         },
         include: {
-            books: {
+            childBooks: {
                 where: { status: BookStatus.FINISHED },
             },
             readingSessions: {
@@ -145,7 +145,7 @@ mapRoutes.get('/child/:childId', async (c) => {
 
     // Calculate stats using helper function
     const stats = await calculateChildStats({
-        books: child.books,
+        books: child.childBooks,
         readingSessions: child.readingSessions,
         id: child.id,
         levelCategory: child.levelCategory,
@@ -188,7 +188,7 @@ mapRoutes.get('/family/:familyId', async (c) => {
         include: {
             children: {
                 include: {
-                    books: {
+                    childBooks: {
                         where: { status: BookStatus.FINISHED },
                     },
                     readingSessions: {
@@ -209,7 +209,7 @@ mapRoutes.get('/family/:familyId', async (c) => {
     // Calculate stats for each child
     const childrenStats = await Promise.all(
         family.children.map(async (child: any) => {
-            const finishedBooksCount = child.books.length;
+            const finishedBooksCount = child.childBooks.length;
             const levelCategory = child.levelCategory || 'EXPLORERS';
             const currentLevel = getCurrentLevel(finishedBooksCount, levelCategory);
             const rank = currentLevel.rank;

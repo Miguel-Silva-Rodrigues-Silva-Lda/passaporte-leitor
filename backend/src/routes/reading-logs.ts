@@ -2,14 +2,13 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { BookStatus } from '@prisma/client';
 import prisma from '../lib/prisma.js';
-import { verifyFamilyParam, verifyChildOwnership, verifySessionOwnership } from '../middleware/authorization.js';
+import { verifyFamilyParam, verifyChildBookOwnership, verifySessionOwnership } from '../middleware/authorization.js';
 import { checkAndAwardAchievements } from '../services/achievements.js';
 
 export const readingLogRoutes = new Hono();
 
 const createSessionSchema = z.object({
-    childId: z.string().cuid(),
-    bookId: z.string().cuid(), // Required now
+    childBookId: z.string().cuid(), // The child's book record this session belongs to
     minutes: z.number().int().min(1),
     pageEnd: z.number().int().optional(),
     mood: z.number().int().min(1).max(5).optional(),
@@ -43,24 +42,23 @@ readingLogRoutes.post('/', async (c) => {
         return c.json({ error: 'Dados inválidos', details: validation.error.issues }, 400);
     }
 
-    const { childId, bookId, minutes, pageEnd, mood, finishedBook, date, rating, favoriteCharacter, notes } = validation.data;
+    const { childBookId, minutes, pageEnd, mood, finishedBook, date, rating, favoriteCharacter, notes } = validation.data;
 
-    // Authorization check: verify child belongs to authenticated family
-    if (!await verifyChildOwnership(c, childId)) {
+    // Authorization check: verify the child_book belongs to the authenticated family
+    if (!await verifyChildBookOwnership(c, childBookId)) {
         return c.json({ error: 'Forbidden - Access denied' }, 403);
     }
 
-    // Verify child exists
-    const child = await prisma.child.findUnique({ where: { id: childId } });
-    if (!child) {
-        return c.json({ error: 'Criança não encontrada' }, 404);
+    // Resolve the child_book → its child + shared book metadata
+    const childBook = await prisma.childBook.findUnique({
+        where: { id: childBookId },
+        include: { book: { select: { id: true, totalPages: true } } },
+    });
+    if (!childBook) {
+        return c.json({ error: 'Livro da criança não encontrado' }, 404);
     }
 
-    // Verify book exists
-    const book = await prisma.book.findUnique({ where: { id: bookId } });
-    if (!book) {
-        return c.json({ error: 'Livro não encontrado' }, 404);
-    }
+    const { childId, bookId } = childBook;
 
     const session = await prisma.readingSession.create({
         data: {
@@ -74,23 +72,23 @@ readingLogRoutes.post('/', async (c) => {
         }
     });
 
-    // If book was finished, update book status and review
-    if (finishedBook && book.status !== BookStatus.FINISHED) {
-        await prisma.book.update({
-            where: { id: bookId },
+    // If the book was finished, update the child's reading state + review
+    if (finishedBook && childBook.status !== BookStatus.FINISHED) {
+        await prisma.childBook.update({
+            where: { id: childBookId },
             data: {
                 status: BookStatus.FINISHED,
                 finishDate: new Date(),
-                currentPage: pageEnd || book.totalPages || undefined,
+                currentPage: pageEnd || childBook.book.totalPages || undefined,
                 rating: rating || undefined,
                 favoriteCharacter: favoriteCharacter || undefined,
                 notes: notes || undefined,
             }
         });
-    } else if (pageEnd && book.status === BookStatus.READING) {
-        // Update current page if book is being read
-        await prisma.book.update({
-            where: { id: bookId },
+    } else if (pageEnd && childBook.status === BookStatus.READING) {
+        // Update current page if the book is being read
+        await prisma.childBook.update({
+            where: { id: childBookId },
             data: { currentPage: pageEnd }
         });
     }

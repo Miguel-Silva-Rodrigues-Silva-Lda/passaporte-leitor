@@ -31,7 +31,7 @@ familyRoutes.get('/:id', async (c) => {
       children: {
         include: {
           _count: {
-            select: { books: true },
+            select: { childBooks: true },
           },
         },
       },

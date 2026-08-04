@@ -27,7 +27,7 @@ export async function verifyChildOwnership(c: Context, childId: string): Promise
 }
 
 /**
- * Verify that a book belongs to the authenticated family (through child).
+ * Verify that a book (shared metadata) belongs to the authenticated family.
  * Use this for routes like /books/:id
  */
 export async function verifyBookOwnership(c: Context, bookId: string): Promise<boolean> {
@@ -36,12 +36,31 @@ export async function verifyBookOwnership(c: Context, bookId: string): Promise<b
   const book = await prisma.book.findFirst({
     where: {
       id: bookId,
-      child: { familyId: authFamilyId }
+      familyId: authFamilyId
     },
     select: { id: true }
   });
 
   return !!book;
+}
+
+/**
+ * Verify that a child_book (per-child reading state) belongs to the
+ * authenticated family (through its child).
+ * Use this for routes like /child-books/:id
+ */
+export async function verifyChildBookOwnership(c: Context, childBookId: string): Promise<boolean> {
+  const authFamilyId = getAuthFamilyId(c);
+
+  const childBook = await prisma.childBook.findFirst({
+    where: {
+      id: childBookId,
+      child: { familyId: authFamilyId }
+    },
+    select: { id: true }
+  });
+
+  return !!childBook;
 }
 
 /**

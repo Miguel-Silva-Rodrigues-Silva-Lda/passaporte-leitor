@@ -12,7 +12,7 @@ import { formatDate, getDaysAgo } from '../lib/utils';
 // ============================================================================
 
 interface SessionData {
-    bookId?: string;
+    childBookId?: string;
     selectedBook?: Child['currentBooks'][0];
     date?: string;
     minutes?: number;
@@ -254,10 +254,10 @@ const Step1SelectBook = ({ data, onChange, onNext, onCancel, currentBooks }: Ste
                 {currentBooks.map((book) => (
                     <button
                         key={book.id}
-                        onClick={() => onChange({ ...data, bookId: book.id, selectedBook: book })}
+                        onClick={() => onChange({ ...data, childBookId: book.id, selectedBook: book })}
                         className={clsx(
                             "w-full p-4 rounded-xl border-2 transition-all flex items-center gap-3 text-left",
-                            data.bookId === book.id
+                            data.childBookId === book.id
                                 ? "border-orange-500 bg-orange-50 ring-2 ring-orange-500"
                                 : "border-gray-200 hover:border-gray-300"
                         )}
@@ -274,7 +274,7 @@ const Step1SelectBook = ({ data, onChange, onNext, onCancel, currentBooks }: Ste
                             </h4>
                             <p className="text-sm text-gray-500 truncate">{book.author}</p>
                         </div>
-                        {data.bookId === book.id && (
+                        {data.childBookId === book.id && (
                             <div className="w-6 h-6 rounded-full bg-orange-500 flex items-center justify-center flex-shrink-0">
                                 <span className="text-white text-xs">✓</span>
                             </div>
@@ -287,7 +287,7 @@ const Step1SelectBook = ({ data, onChange, onNext, onCancel, currentBooks }: Ste
                 <Button variant="secondary" onClick={onCancel} className="flex-1">
                     Cancelar
                 </Button>
-                <Button onClick={onNext} disabled={!data.bookId} className="flex-1">
+                <Button onClick={onNext} disabled={!data.childBookId} className="flex-1">
                     Continuar →
                 </Button>
             </div>
@@ -597,13 +597,12 @@ export function LogReadingModal({ isOpen, onClose, child, currentBooks, onSucces
 
     const createSessionMutation = useMutation({
         mutationFn: async () => {
-            if (!child?.id || !sessionData.bookId || !sessionData.minutes) {
+            if (!child?.id || !sessionData.childBookId || !sessionData.minutes) {
                 throw new Error('Missing required data');
             }
 
             return readingLogsApi.create({
-                childId: child.id,
-                bookId: sessionData.bookId,
+                childBookId: sessionData.childBookId,
                 minutes: sessionData.minutes,
                 pageEnd: sessionData.pageEnd,
                 mood: sessionData.mood,
@@ -629,7 +628,7 @@ export function LogReadingModal({ isOpen, onClose, child, currentBooks, onSucces
     }, [onClose]);
 
     const handleSubmit = useCallback(async () => {
-        if (!child || !sessionData.bookId) return;
+        if (!child || !sessionData.childBookId) return;
 
         try {
             await createSessionMutation.mutateAsync();
@@ -638,7 +637,7 @@ export function LogReadingModal({ isOpen, onClose, child, currentBooks, onSucces
         } catch (err) {
             console.error(err);
         }
-    }, [child, sessionData.bookId, sessionData.finishedBook, createSessionMutation, onSuccess]);
+    }, [child, sessionData.childBookId, sessionData.finishedBook, createSessionMutation, onSuccess]);
 
     // Memoized step navigation callbacks
     const goToStep = useCallback((s: number) => setStep(s), []);

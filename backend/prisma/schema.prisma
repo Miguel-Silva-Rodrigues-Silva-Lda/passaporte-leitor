@@ -6,8 +6,8 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 // ============================================================================
@@ -22,18 +22,18 @@ enum LevelCategory {
 }
 
 enum Genre {
-  ADVENTURE  @map("adventure")
-  FANTASY    @map("fantasy")
-  MYSTERY    @map("mystery")
-  SCIENCE    @map("science")
-  COMICS     @map("comics")
-  ROMANCE    @map("romance")
-  HORROR     @map("horror")
-  BIOGRAPHY  @map("biography")
-  POETRY     @map("poetry")
-  HISTORY    @map("history")
-  ANIMALS    @map("animals")
-  HUMOR      @map("humor")
+  ADVENTURE @map("adventure")
+  FANTASY   @map("fantasy")
+  MYSTERY   @map("mystery")
+  SCIENCE   @map("science")
+  COMICS    @map("comics")
+  ROMANCE   @map("romance")
+  HORROR    @map("horror")
+  BIOGRAPHY @map("biography")
+  POETRY    @map("poetry")
+  HISTORY   @map("history")
+  ANIMALS   @map("animals")
+  HUMOR     @map("humor")
 }
 
 enum BookStatus {
@@ -50,11 +50,12 @@ model Family {
   id        String   @id @default(cuid())
   name      String
   email     String?  @unique
-  password  String?  // Hashed, opcional para MVP
+  password  String? // Hashed, opcional para MVP
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   children Child[]
+  books    Book[]
   settings FamilySettings?
 
   @@map("families")
@@ -66,9 +67,9 @@ model FamilySettings {
   family   Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
 
   // Preferências
-  language       String  @default("pt-PT")
-  notifications  Boolean @default(true)
-  weeklyReport   Boolean @default(true)
+  language      String  @default("pt-PT")
+  notifications Boolean @default(true)
+  weeklyReport  Boolean @default(true)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -83,66 +84,86 @@ model Child {
   avatar        String        @default("👦")
   birthYear     Int?
   levelCategory LevelCategory @default(EXPLORERS)
-  dailyGoal     Int           @default(15)  // Daily reading goal in minutes
+  dailyGoal     Int           @default(15) // Daily reading goal in minutes
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
-  family           Family            @relation(fields: [familyId], references: [id], onDelete: Cascade)
-  books            Book[]
-  readingSessions  ReadingSession[]
-  achievements     ChildAchievement[]
+  family          Family             @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  childBooks      ChildBook[]
+  readingSessions ReadingSession[]
+  achievements    ChildAchievement[]
 
   @@index([familyId])
   @@map("children")
 }
 
+// Metadados partilhados do livro (âmbito família).
+// Vários filhos da mesma família podem partilhar o mesmo Book,
+// cada um com o seu próprio estado de leitura em ChildBook.
 model Book {
   id       String @id @default(cuid())
-  childId  String
-  child    Child  @relation(fields: [childId], references: [id], onDelete: Cascade)
+  familyId String
+  family   Family @relation(fields: [familyId], references: [id], onDelete: Cascade)
 
   // Informação do livro
-  title    String
-  author   String
-  isbn     String?
-  genre    Genre
+  title      String
+  author     String
+  isbn       String?
+  genre      Genre
   totalPages Int?
 
-  // Estado de Leitura
-  status          BookStatus @default(TO_READ)
-  currentPage     Int?
-  startDate       DateTime?
-  finishDate      DateTime?
-  
-  // Avaliação
-  rating            Int?      // 1-5
-  notes             String?   // "O que achou"
-  favoriteCharacter String?
-  
   // Datas de registo
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  childBooks      ChildBook[]
   readingSessions ReadingSession[]
 
-  @@index([childId])
+  @@index([familyId])
   @@index([genre])
-  @@index([childId, status])
-  @@index([childId, genre])
   @@map("books")
 }
 
+// Estado de leitura por-criança de um Book.
+model ChildBook {
+  id      String @id @default(cuid())
+  bookId  String
+  book    Book   @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  childId String
+  child   Child  @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  // Estado de Leitura
+  status      BookStatus @default(TO_READ)
+  currentPage Int?
+  startDate   DateTime?
+  finishDate  DateTime?
+
+  // Avaliação
+  rating            Int? // 1-5
+  notes             String? // "O que achou"
+  favoriteCharacter String?
+
+  // Datas de registo
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([childId, bookId])
+  @@index([childId])
+  @@index([childId, status])
+  @@map("child_books")
+}
+
 model Achievement {
-  id          String @id @default(cuid())
-  code        String @unique
+  id          String              @id @default(cuid())
+  code        String              @unique
   name        String
   description String
   icon        String
   category    AchievementCategory @default(READING)
-  
+
   // Requisitos (JSON para flexibilidade)
   requirements Json @default("{}")
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -152,23 +173,23 @@ model Achievement {
 }
 
 model ChildAchievement {
-  id            String   @id @default(cuid())
+  id            String      @id @default(cuid())
   childId       String
-  child         Child    @relation(fields: [childId], references: [id], onDelete: Cascade)
+  child         Child       @relation(fields: [childId], references: [id], onDelete: Cascade)
   achievementId String
   achievement   Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
-  
-  earnedAt      DateTime @default(now())
+
+  earnedAt DateTime @default(now())
 
   @@unique([childId, achievementId])
   @@map("child_achievements")
 }
 
 enum AchievementCategory {
-  READING    // Relacionado com quantidade de leitura
-  GENRE      // Relacionado com géneros
-  STREAK     // Relacionado com consistência
-  SPECIAL    // Conquistas especiais
+  READING // Relacionado com quantidade de leitura
+  GENRE // Relacionado com géneros
+  STREAK // Relacionado com consistência
+  SPECIAL // Conquistas especiais
 }
 
 // ============================================================================
@@ -178,27 +199,27 @@ enum AchievementCategory {
 // Os índices principais já estão definidos acima com @@index
 
 model ReadingSession {
-  id        String   @id @default(cuid())
-  childId   String
-  child     Child    @relation(fields: [childId], references: [id], onDelete: Cascade)
-  
+  id      String @id @default(cuid())
+  childId String
+  child   Child  @relation(fields: [childId], references: [id], onDelete: Cascade)
+
   // Dados da sessão
-  date      DateTime @default(now())  // Dia da sessão
-  minutes   Int                        // Duração em minutos (obrigatório)
-  
+  date    DateTime @default(now()) // Dia da sessão
+  minutes Int // Duração em minutos (obrigatório)
+
   // Livro (obrigatório)
-  bookId    String
-  book      Book     @relation(fields: [bookId], references: [id])
-  
+  bookId String
+  book   Book   @relation(fields: [bookId], references: [id])
+
   // Progresso (opcional)
-  pageEnd   Int?                       // Página onde terminou
-  
+  pageEnd Int? // Página onde terminou
+
   // Feedback (opcional)
-  mood      Int?     @default(3)       // 1-5 (😫 a 🤩)
-  
+  mood Int? @default(3) // 1-5 (😫 a 🤩)
+
   // Terminou o livro nesta sessão?
   finishedBook Boolean @default(false)
-  
+
   // Timestamps
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

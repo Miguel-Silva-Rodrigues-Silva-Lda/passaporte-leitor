@@ -13,10 +13,19 @@ interface AchievementRequirement {
  * Retorna as novas conquistas atribuídas
  */
 export async function checkAndAwardAchievements(childId: string) {
-  // Obter todos os livros da criança
-  const books = await prisma.book.findMany({
+  // Obter todos os livros da criança (estado por-criança + metadados)
+  const childBooks = await prisma.childBook.findMany({
     where: { childId },
+    include: { book: { select: { genre: true } } },
   });
+
+  // Achatar para a forma usada abaixo (genre vem dos metadados do livro)
+  const books = childBooks.map((cb) => ({
+    status: cb.status,
+    genre: cb.book.genre,
+    rating: cb.rating,
+    finishDate: cb.finishDate,
+  }));
 
   // Obter sessões de leitura (para conquistas de streak/tempo/sessões)
   const sessions = await prisma.readingSession.findMany({
@@ -128,14 +137,14 @@ export async function checkAndAwardAchievements(childId: string) {
  * Obtém estatísticas de géneros para uma criança
  */
 export async function getGenreStats(childId: string) {
-  const books = await prisma.book.findMany({
+  const childBooks = await prisma.childBook.findMany({
     where: { childId },
-    select: { genre: true },
+    select: { book: { select: { genre: true } } },
   });
 
   const genreCount: Record<string, number> = {};
-  for (const book of books) {
-    genreCount[book.genre] = (genreCount[book.genre] || 0) + 1;
+  for (const cb of childBooks) {
+    genreCount[cb.book.genre] = (genreCount[cb.book.genre] || 0) + 1;
   }
 
   const genreInfo: Record<string, { name: string; icon: string; theme: string; color: string }> = {

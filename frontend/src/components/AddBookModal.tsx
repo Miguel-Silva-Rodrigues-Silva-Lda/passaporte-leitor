@@ -1,10 +1,47 @@
-import React, { useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { booksApi, readingLogsApi } from '../lib/api';
+import React, { useEffect, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { booksApi, childBooksApi, readingLogsApi } from '../lib/api';
 import { Modal, Button, Input } from './ui';
-import { GENRES, type Genre, type CreateBookInput } from '../lib/types';
-import { useSelectedChild } from '../lib/store';
+import { GENRES, type Genre, type BookStatus, type CreateChildBookInput, type LibraryBook } from '../lib/types';
+import { useSelectedChild, useFamilyId } from '../lib/store';
 import { TimeInput, MoodSelector, COLORS } from './reading';
+
+// ============================================================================
+// WIZARD STATE
+// ============================================================================
+
+interface WizardData {
+    // New-book metadata (unused when adding from the library)
+    title?: string;
+    author?: string;
+    genre?: Genre;
+    totalPages?: number;
+    // Set when adding an existing book from the family library
+    bookId?: string;
+    // Per-child reading state
+    status?: BookStatus;
+    currentPage?: number;
+    startDate?: string;
+    finishDate?: string;
+    rating?: number;
+    notes?: string;
+    favoriteCharacter?: string;
+    // Wizard-only
+    childBookId?: string; // id of the created child_book (for the reading log)
+    readToday: boolean | null;
+    readingMinutes: number;
+    mood: number;
+}
+
+type AddMode = 'choose' | 'library' | 'new';
+
+const initialWizardData: WizardData = {
+    status: 'to-read',
+    startDate: new Date().toISOString().split('T')[0],
+    readToday: null,
+    readingMinutes: 15,
+    mood: 0,
+};
 
 // TimeInput and MoodSelector now imported from './reading'
 // ============================================================================
@@ -395,6 +432,108 @@ const SuccessScreen = ({ data, onClose }: any) => {
 };
 
 // ============================================================================
+// CHOICE SCREEN (from library vs new book)
+// ============================================================================
+interface ChoiceScreenProps {
+    onFromLibrary: () => void;
+    onNewBook: () => void;
+    onCancel: () => void;
+}
+const ChoiceScreen = ({ onFromLibrary, onNewBook, onCancel }: ChoiceScreenProps) => (
+    <div className="space-y-4">
+        <p className="text-center text-gray-600 mb-2">Como queres adicionar o livro?</p>
+        <div className="grid grid-cols-2 gap-4">
+            <button
+                type="button"
+                onClick={onFromLibrary}
+                className="p-6 rounded-xl text-center bg-gray-100 hover:bg-orange-100 transition-all"
+            >
+                <span className="text-4xl block mb-2">📚</span>
+                <span className="font-bold text-gray-800">Da biblioteca</span>
+                <span className="block text-xs text-gray-500 mt-1">Livros já da família</span>
+            </button>
+            <button
+                type="button"
+                onClick={onNewBook}
+                className="p-6 rounded-xl text-center bg-gray-100 hover:bg-orange-100 transition-all"
+            >
+                <span className="text-4xl block mb-2">✨</span>
+                <span className="font-bold text-gray-800">Livro novo</span>
+                <span className="block text-xs text-gray-500 mt-1">Adicionar do zero</span>
+            </button>
+        </div>
+        <div className="pt-2">
+            <Button variant="secondary" onClick={onCancel} className="w-full bg-gray-100 text-gray-700 hover:bg-gray-200">
+                Cancelar
+            </Button>
+        </div>
+    </div>
+);
+
+// ============================================================================
+// LIBRARY PICKER
+// ============================================================================
+interface LibraryPickerProps {
+    books: LibraryBook[];
+    onSelect: (book: LibraryBook) => void;
+    onBack: () => void;
+}
+const LibraryPicker = ({ books, onSelect, onBack }: LibraryPickerProps) => {
+    const [search, setSearch] = useState('');
+    const filtered = books.filter((b) =>
+        `${b.title} ${b.author}`.toLowerCase().includes(search.toLowerCase())
+    );
+
+    return (
+        <div className="space-y-4">
+            <Input
+                label="Procurar na biblioteca"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Título ou autor..."
+                icon="🔍"
+            />
+
+            {filtered.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                    <span className="text-4xl block mb-2">📭</span>
+                    <p>Nenhum livro disponível para adicionar.</p>
+                </div>
+            ) : (
+                <div className="space-y-2 max-h-80 overflow-y-auto">
+                    {filtered.map((book) => {
+                        const genre = GENRES[book.genre];
+                        return (
+                            <button
+                                key={book.id}
+                                type="button"
+                                onClick={() => onSelect(book)}
+                                className="w-full flex items-center gap-3 p-3 rounded-xl border-2 border-gray-100 hover:border-orange-300 hover:bg-orange-50 transition-all text-left"
+                            >
+                                <div
+                                    className="w-9 h-9 rounded-lg flex items-center justify-center text-lg flex-shrink-0"
+                                    style={{ backgroundColor: `${genre?.color}15` }}
+                                >
+                                    {genre?.icon}
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                    <p className="font-semibold text-sm truncate" style={{ color: COLORS.text }}>{book.title}</p>
+                                    <p className="text-xs text-gray-400 truncate">{book.author}</p>
+                                </div>
+                            </button>
+                        );
+                    })}
+                </div>
+            )}
+
+            <div className="flex justify-start pt-2 border-t border-gray-100">
+                <Button variant="secondary" onClick={onBack}>← Voltar</Button>
+            </div>
+        </div>
+    );
+};
+
+// ============================================================================
 // MAIN COMPONENT
 // ============================================================================
 
@@ -407,32 +546,49 @@ interface AddBookModalProps {
 
 export function AddBookModal({ isOpen, onClose, child, onSuccess }: AddBookModalProps) {
     const queryClient = useQueryClient();
+    const familyId = useFamilyId();
     const [step, setStep] = useState(1);
-    const [bookData, setBookData] = useState<Partial<CreateBookInput & { readToday: boolean | null; readingMinutes: number; mood: number }>>({
-        status: 'to-read',
-        startDate: new Date().toISOString().split('T')[0],
-        readToday: null,
-        readingMinutes: 15,
-        mood: 0,
-    });
+    const [mode, setMode] = useState<AddMode>('new');
+    const [bookData, setBookData] = useState<WizardData>(initialWizardData);
 
-    const createBookMutation = useMutation({
-        mutationFn: booksApi.create,
+    // Family library, excluding books this child already has
+    const { data: libraryData } = useQuery({
+        queryKey: ['library', familyId],
+        queryFn: () => booksApi.library(familyId!),
+        enabled: !!familyId && isOpen,
+    });
+    const availableLibraryBooks = (libraryData?.books ?? []).filter(
+        (b) => !child || !b.childIds.includes(child.id)
+    );
+
+    const createChildBookMutation = useMutation({
+        mutationFn: childBooksApi.create,
     });
 
     const createReadingLogMutation = useMutation({
         mutationFn: readingLogsApi.create,
     });
 
+    // Reset to the chooser whenever the modal opens
+    useEffect(() => {
+        if (isOpen) {
+            setStep(1);
+            setBookData(initialWizardData);
+            setMode('choose');
+        }
+    }, [isOpen]);
+
+    // Skip the chooser when the family has no reusable library books
+    useEffect(() => {
+        if (isOpen && mode === 'choose' && libraryData && availableLibraryBooks.length === 0) {
+            setMode('new');
+        }
+    }, [isOpen, mode, libraryData, availableLibraryBooks.length]);
+
     const handleClose = () => {
         setStep(1);
-        setBookData({
-            status: 'to-read',
-            startDate: new Date().toISOString().split('T')[0],
-            readToday: null,
-            readingMinutes: 15,
-            mood: 0,
-        });
+        setMode('new');
+        setBookData(initialWizardData);
         onClose();
     };
 
@@ -446,37 +602,53 @@ export function AddBookModal({ isOpen, onClose, child, onSuccess }: AddBookModal
         return 3;
     };
 
-    const handleSubmit = async (existingBookId?: string) => {
-        if (!child || !bookData.title || !bookData.genre) return;
+    // Build the create payload: either link a library book (bookId) or a new book.
+    const buildCreatePayload = (): CreateChildBookInput => {
+        const state = {
+            status: bookData.status,
+            currentPage: bookData.currentPage,
+            startDate: bookData.startDate ? new Date(bookData.startDate).toISOString() : undefined,
+            finishDate: bookData.finishDate ? new Date(bookData.finishDate).toISOString() : undefined,
+            rating: bookData.rating,
+            notes: bookData.notes,
+            favoriteCharacter: bookData.favoriteCharacter,
+        };
+        if (bookData.bookId) {
+            return { childId: child!.id, bookId: bookData.bookId, ...state };
+        }
+        return {
+            childId: child!.id,
+            book: {
+                title: bookData.title!,
+                author: bookData.author || 'Desconhecido',
+                genre: bookData.genre!,
+                totalPages: bookData.totalPages,
+            },
+            ...state,
+        };
+    };
+
+    // Create the child_book once and return its id (reused across steps).
+    const ensureChildBook = async (): Promise<string | undefined> => {
+        if (bookData.childBookId) return bookData.childBookId;
+        const result = await createChildBookMutation.mutateAsync(buildCreatePayload());
+        const childBookId = result.childBook.id;
+        setBookData((prev) => ({ ...prev, childBookId }));
+        // Invalidate immediately so cards update even if the modal is closed
+        queryClient.invalidateQueries({ queryKey: ['children'] });
+        return childBookId;
+    };
+
+    const handleSubmit = async () => {
+        if (!child || (!bookData.bookId && (!bookData.title || !bookData.genre))) return;
 
         try {
-            let bookId = existingBookId;
-
-            // Only create book if it doesn't already exist
-            if (!bookId) {
-                const result = await createBookMutation.mutateAsync({
-                    childId: child.id,
-                    title: bookData.title,
-                    author: bookData.author || "Desconhecido",
-                    genre: bookData.genre as Genre,
-                    totalPages: bookData.totalPages,
-                    status: bookData.status,
-                    currentPage: bookData.currentPage,
-                    startDate: bookData.startDate ? new Date(bookData.startDate).toISOString() : undefined,
-                    finishDate: bookData.finishDate ? new Date(bookData.finishDate).toISOString() : undefined,
-                    rating: bookData.rating,
-                    notes: bookData.notes,
-                    favoriteCharacter: bookData.favoriteCharacter,
-                    dateRead: new Date().toISOString()
-                } as CreateBookInput);
-                bookId = result.book.id;
-            }
+            const childBookId = await ensureChildBook();
 
             // Create reading session if applicable
-            if ((bookData.readToday || isEndDateToday) && bookData.readingMinutes && bookId) {
+            if ((bookData.readToday || isEndDateToday) && bookData.readingMinutes && childBookId) {
                 await createReadingLogMutation.mutateAsync({
-                    childId: child.id,
-                    bookId: bookId,
+                    childBookId,
                     minutes: bookData.readingMinutes,
                     pageEnd: bookData.currentPage,
                     mood: bookData.mood || undefined,
@@ -510,23 +682,7 @@ export function AddBookModal({ isOpen, onClose, child, onSuccess }: AddBookModal
                     await handleSubmit();
                     setStep(5);
                 } else if (bookData.readToday === true) {
-                    // Only create book if it doesn't already exist
-                    if (!(bookData as any).id) {
-                        const result = await createBookMutation.mutateAsync({
-                            childId: child!.id,
-                            title: bookData.title!,
-                            author: bookData.author || "Desconhecido",
-                            genre: bookData.genre as Genre,
-                            totalPages: bookData.totalPages,
-                            status: bookData.status,
-                            currentPage: bookData.currentPage,
-                            startDate: bookData.startDate ? new Date(bookData.startDate).toISOString() : undefined,
-                            dateRead: new Date().toISOString()
-                        } as CreateBookInput);
-                        setBookData({ ...bookData, id: result.book.id } as any);
-                        // Invalidate cache immediately so child card updates even if modal is closed
-                        queryClient.invalidateQueries({ queryKey: ['children'] });
-                    }
+                    await ensureChildBook();
                     setStep(4);
                 }
             } else if (bookData.status === 'finished') {
@@ -534,36 +690,32 @@ export function AddBookModal({ isOpen, onClose, child, onSuccess }: AddBookModal
                     await handleSubmit();
                     setStep(5);
                 } else {
-                    // Only create book if it doesn't already exist
-                    if (!(bookData as any).id) {
-                        const result = await createBookMutation.mutateAsync({
-                            childId: child!.id,
-                            title: bookData.title!,
-                            author: bookData.author || "Desconhecido",
-                            genre: bookData.genre as Genre,
-                            totalPages: bookData.totalPages,
-                            status: bookData.status,
-                            currentPage: bookData.currentPage,
-                            startDate: bookData.startDate ? new Date(bookData.startDate).toISOString() : undefined,
-                            finishDate: bookData.finishDate ? new Date(bookData.finishDate).toISOString() : undefined,
-                            rating: bookData.rating,
-                            notes: bookData.notes,
-                            favoriteCharacter: bookData.favoriteCharacter,
-                            dateRead: new Date().toISOString()
-                        } as CreateBookInput);
-                        setBookData({ ...bookData, id: result.book.id } as any);
-                        // Invalidate cache immediately so child card updates even if modal is closed
-                        queryClient.invalidateQueries({ queryKey: ['children'] });
-                    }
+                    await ensureChildBook();
                     setStep(4);
                 }
             }
         } else if (step === 4) {
-            await handleSubmit((bookData as any).id);
+            await handleSubmit();
         }
     };
 
+    // Picking a book from the library fills metadata + bookId, then jumps to state step
+    const handleLibrarySelect = (book: LibraryBook) => {
+        setBookData({
+            ...initialWizardData,
+            bookId: book.id,
+            title: book.title,
+            author: book.author,
+            genre: book.genre,
+            totalPages: book.totalPages ?? undefined,
+        });
+        setStep(2);
+    };
+
     if (!isOpen) return null;
+
+    // Are we inside the step wizard (vs the chooser / library picker)?
+    const inWizard = mode === 'new' || (mode === 'library' && step >= 2);
 
     return (
         <Modal
@@ -572,7 +724,23 @@ export function AddBookModal({ isOpen, onClose, child, onSuccess }: AddBookModal
             title={<span>📚 Adicionar Livro</span>}
             variant="white"
         >
-            {step < 5 && (
+            {mode === 'choose' && (
+                <ChoiceScreen
+                    onFromLibrary={() => { setMode('library'); setStep(1); }}
+                    onNewBook={() => { setMode('new'); setStep(1); setBookData(initialWizardData); }}
+                    onCancel={handleClose}
+                />
+            )}
+
+            {mode === 'library' && step === 1 && (
+                <LibraryPicker
+                    books={availableLibraryBooks}
+                    onSelect={handleLibrarySelect}
+                    onBack={() => setMode('choose')}
+                />
+            )}
+
+            {inWizard && step < 5 && (
                 <div className="flex items-center justify-center gap-4 mb-8 select-none">
                     {Array.from({ length: getTotalSteps() }).map((_, i) => {
                         const s = i + 1;
@@ -597,7 +765,7 @@ export function AddBookModal({ isOpen, onClose, child, onSuccess }: AddBookModal
                 </div>
             )}
 
-            {step === 1 && (
+            {inWizard && mode === 'new' && step === 1 && (
                 <Step1BookInfo
                     data={bookData}
                     onChange={setBookData}
@@ -606,7 +774,7 @@ export function AddBookModal({ isOpen, onClose, child, onSuccess }: AddBookModal
                 />
             )}
 
-            {step === 2 && (
+            {inWizard && step === 2 && (
                 <Step2ReadingStatus
                     data={bookData}
                     onChange={setBookData}
@@ -615,7 +783,7 @@ export function AddBookModal({ isOpen, onClose, child, onSuccess }: AddBookModal
                 />
             )}
 
-            {step === 3 && bookData.status === 'reading' && (
+            {inWizard && step === 3 && bookData.status === 'reading' && (
                 <Step3ReadingToday
                     data={bookData}
                     onChange={setBookData}
@@ -624,7 +792,7 @@ export function AddBookModal({ isOpen, onClose, child, onSuccess }: AddBookModal
                 />
             )}
 
-            {step === 3 && bookData.status === 'finished' && (
+            {inWizard && step === 3 && bookData.status === 'finished' && (
                 <Step3Review
                     data={bookData}
                     onChange={setBookData}
@@ -633,7 +801,7 @@ export function AddBookModal({ isOpen, onClose, child, onSuccess }: AddBookModal
                 />
             )}
 
-            {step === 4 && (
+            {inWizard && step === 4 && (
                 <Step4ReadingSession
                     data={bookData}
                     onChange={setBookData}

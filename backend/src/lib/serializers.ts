@@ -15,16 +15,18 @@ export const serializeBookStatus = (status: BookStatus): SerializedBookStatus =>
 };
 
 /**
- * Serialize a book object, converting its status to API format
+ * Serialize a child_book (per-child reading state), converting its status to
+ * API format. Any included `book` metadata / `child` relation is passed through
+ * untouched, so callers get the separated { ...state, status, book, child } shape.
  */
-export const serializeBook = <T extends { status: BookStatus }>(book: T): Omit<T, 'status'> & { status: SerializedBookStatus } => ({
-    ...book,
-    status: serializeBookStatus(book.status),
+export const serializeChildBook = <T extends { status: BookStatus }>(childBook: T): Omit<T, 'status'> & { status: SerializedBookStatus } => ({
+    ...childBook,
+    status: serializeBookStatus(childBook.status),
 });
 
 /**
- * Serialize an array of books
+ * Serialize an array of child_books
  */
-export const serializeBooks = <T extends { status: BookStatus }>(books: T[]): (Omit<T, 'status'> & { status: SerializedBookStatus })[] => {
-    return books.map(serializeBook);
+export const serializeChildBooks = <T extends { status: BookStatus }>(childBooks: T[]): (Omit<T, 'status'> & { status: SerializedBookStatus })[] => {
+    return childBooks.map(serializeChildBook);
 };

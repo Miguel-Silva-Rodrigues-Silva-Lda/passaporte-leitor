@@ -3,7 +3,7 @@ import prisma from '../lib/prisma.js';
 import { getGenreStats } from '../services/achievements.js';
 import { getCurrentLevel, getNextLevel, getLevelProgress, getBooksToNextLevel } from '../lib/levels-config.js';
 import { verifyFamilyParam, verifyChildOwnership } from '../middleware/authorization.js';
-import { serializeBooks } from '../lib/serializers.js';
+import { serializeChildBooks } from '../lib/serializers.js';
 
 export const statsRoutes = new Hono();
 
@@ -23,7 +23,7 @@ statsRoutes.get('/child/:childId', async (c) => {
   const child = await prisma.child.findUnique({
     where: { id: childId },
     include: {
-      books: true,
+      childBooks: { include: { book: true } },
       achievements: {
         include: {
           achievement: true,
@@ -36,8 +36,8 @@ statsRoutes.get('/child/:childId', async (c) => {
     return c.json({ error: 'Criança não encontrada' }, 404);
   }
 
-  // Serialize book status to lowercase
-  const serializedBooks = serializeBooks(child.books);
+  // Serialize per-child book status to lowercase (metadata stays nested under .book)
+  const serializedBooks = serializeChildBooks(child.childBooks);
 
   const bookCount = serializedBooks.length;
   const finishedBooksCount = serializedBooks.filter((b: any) => b.status === 'finished').length;
@@ -77,10 +77,10 @@ statsRoutes.get('/child/:childId', async (c) => {
       ? ratedBooks.reduce((sum, b) => sum + (b.rating || 0), 0) / ratedBooks.length
       : null;
 
-  // Género favorito
+  // Género favorito (metadados vêm de .book)
   const genreCounts: Record<string, number> = {};
-  for (const book of serializedBooks) {
-    genreCounts[book.genre] = (genreCounts[book.genre] || 0) + 1;
+  for (const cb of serializedBooks) {
+    genreCounts[cb.book.genre] = (genreCounts[cb.book.genre] || 0) + 1;
   }
   const favoriteGenre =
     Object.entries(genreCounts).length > 0
@@ -139,7 +139,7 @@ statsRoutes.get('/family/:familyId', async (c) => {
     include: {
       children: {
         include: {
-          books: true,
+          childBooks: { include: { book: true } },
           achievements: true,
         },
       },
@@ -150,15 +150,15 @@ statsRoutes.get('/family/:familyId', async (c) => {
     return c.json({ error: 'Família não encontrada' }, 404);
   }
 
-  const allBooks = family.children.flatMap((c) => serializeBooks(c.books));
+  const allBooks = family.children.flatMap((c) => serializeChildBooks(c.childBooks));
   const totalBooks = allBooks.length;
 
-  // Count unique genres discovered
-  const uniqueGenres = new Set(allBooks.map((book) => book.genre));
+  // Count unique genres discovered (metadata under .book)
+  const uniqueGenres = new Set(allBooks.map((cb) => cb.book.genre));
 
   // Estatísticas por criança
   const childStats = family.children.map((child) => {
-    const serializedChildBooks = serializeBooks(child.books);
+    const serializedChildBooks = serializeChildBooks(child.childBooks);
     const finishedCount = serializedChildBooks.filter((b) => b.status === 'finished').length;
     const childLevelCategory = child.levelCategory || 'EXPLORERS';
     const childCurrentLevel = getCurrentLevel(finishedCount, childLevelCategory);
@@ -213,7 +213,7 @@ statsRoutes.get('/leaderboard/:familyId', async (c) => {
   const children = await prisma.child.findMany({
     where: { familyId },
     include: {
-      books: true,
+      childBooks: { include: { book: true } },
     },
   });
 
@@ -232,10 +232,10 @@ statsRoutes.get('/leaderboard/:familyId', async (c) => {
   const leaderboard = children
     .map((child) => {
       const filteredBooks = filterDate
-        ? child.books.filter((b: any) => b.finishDate && new Date(b.finishDate) >= filterDate!)
-        : child.books;
+        ? child.childBooks.filter((b: any) => b.finishDate && new Date(b.finishDate) >= filterDate!)
+        : child.childBooks;
 
-      const serializedChildBooks = serializeBooks(child.books);
+      const serializedChildBooks = serializeChildBooks(child.childBooks);
       const childFinished = serializedChildBooks.filter((b) => b.status === 'finished').length;
       const childCategory = child.levelCategory || 'EXPLORERS';
       const childCurLevel = getCurrentLevel(childFinished, childCategory);

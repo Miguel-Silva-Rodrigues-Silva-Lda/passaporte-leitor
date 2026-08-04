@@ -2,12 +2,16 @@ import type {
   Family,
   Child,
   Book,
+  ChildBook,
+  LibraryBook,
   Achievement,
   ChildStats,
   FamilyStats,
   CreateFamilyInput,
   CreateChildInput,
-  CreateBookInput,
+  CreateChildBookInput,
+  UpdateChildBookInput,
+  UpdateBookInput,
   RegisterInput,
   Genre,
 } from './types';
@@ -142,7 +146,35 @@ export const childrenApi = {
 // BOOKS API
 // ============================================================================
 
+// Shared book metadata + family library
 export const booksApi = {
+  // Family library (metadata + which children already have each book)
+  library: (familyId: string, filters?: { genre?: Genre; search?: string }) => {
+    const params = new URLSearchParams();
+    if (filters?.genre) params.append('genre', filters.genre);
+    if (filters?.search) params.append('search', filters.search);
+    const query = params.toString();
+    return request<{ books: LibraryBook[] }>(
+      `/books/library/${familyId}${query ? `?${query}` : ''}`
+    );
+  },
+
+  // Update shared metadata (affects every child sharing the book)
+  update: (id: string, data: UpdateBookInput) =>
+    request<Book>(`/books/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+
+  // Delete the shared book (removes it from the library + all children's copies)
+  delete: (id: string) =>
+    request<{ success: boolean }>(`/books/${id}`, {
+      method: 'DELETE',
+    }),
+};
+
+// Per-child reading state
+export const childBooksApi = {
   getByFamily: (
     familyId: string,
     filters?: {
@@ -166,12 +198,12 @@ export const booksApi = {
 
     const queryString = params.toString();
     return request<{
-      books: Book[];
+      childBooks: ChildBook[];
       counts: { reading: number; 'to-read': number; finished: number };
-    }>(`/books/family/${familyId}${queryString ? `?${queryString}` : ''}`);
+    }>(`/child-books/family/${familyId}${queryString ? `?${queryString}` : ''}`);
   },
 
-  get: (id: string) => request<Book>(`/books/${id}`),
+  get: (id: string) => request<ChildBook>(`/child-books/${id}`),
 
   getByChild: (childId: string, params?: { genre?: Genre; limit?: number; offset?: number }) => {
     const searchParams = new URLSearchParams();
@@ -179,23 +211,29 @@ export const booksApi = {
     if (params?.limit) searchParams.set('limit', params.limit.toString());
     if (params?.offset) searchParams.set('offset', params.offset.toString());
     const query = searchParams.toString();
-    return request<{ books: Book[]; total: number }>(`/books/child/${childId}${query ? `?${query}` : ''}`);
+    return request<{ childBooks: ChildBook[]; total: number }>(
+      `/child-books/child/${childId}${query ? `?${query}` : ''}`
+    );
   },
 
-  create: (data: CreateBookInput) =>
-    request<{ book: Book; newAchievements: Achievement[] }>('/books', {
+  // Add a book to a child: either { childId, bookId } (from library) or
+  // { childId, book: {...} } (new book). Optionally with initial reading state.
+  create: (data: CreateChildBookInput) =>
+    request<{ childBook: ChildBook; newAchievements: Achievement[] }>('/child-books', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
 
-  update: (id: string, data: Partial<Omit<CreateBookInput, 'childId'>>) =>
-    request<Book>(`/books/${id}`, {
+  // Update a child's reading state
+  update: (id: string, data: UpdateChildBookInput) =>
+    request<ChildBook>(`/child-books/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     }),
 
+  // Remove a child's copy of a book (keeps the shared book unless orphaned)
   delete: (id: string) =>
-    request<{ success: boolean }>(`/books/${id}`, {
+    request<{ success: boolean }>(`/child-books/${id}`, {
       method: 'DELETE',
     }),
 };
@@ -250,8 +288,7 @@ export const statsApi = {
 
 export const readingLogsApi = {
   create: (data: {
-    childId: string;
-    bookId: string;
+    childBookId: string;
     minutes: number;
     pageEnd?: number;
     mood?: number;

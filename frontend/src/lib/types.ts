@@ -102,31 +102,46 @@ export interface Child {
     finishedAt: string;
   } | null;
 
-  books?: Book[];
+  childBooks?: ChildBook[];
   achievements?: ChildAchievement[];
   _count?: {
-    books: number;
+    childBooks: number;
   };
 }
 
+// Shared book metadata (family library). Reading state lives in ChildBook.
 export interface Book {
   id: string;
-  childId: string;
+  familyId: string;
   title: string;
   author: string;
-  isbn?: string;
+  isbn?: string | null;
   genre: Genre;
-  totalPages?: number;
-  status: 'to-read' | 'reading' | 'finished';
-  currentPage?: number;
-  startDate?: string;
-  finishDate?: string;
-  rating?: number;
-  notes?: string;
-  favoriteCharacter?: string;
-  dateRead: string;
+  totalPages?: number | null;
   createdAt: string;
   updatedAt: string;
+}
+
+// A library entry: shared book + which children already have it.
+export interface LibraryBook extends Book {
+  childIds: string[];
+}
+
+// Per-child reading state, with the shared book metadata nested under `book`.
+export interface ChildBook {
+  id: string;
+  bookId: string;
+  childId: string;
+  status: BookStatus;
+  currentPage?: number | null;
+  startDate?: string | null;
+  finishDate?: string | null;
+  rating?: number | null;
+  notes?: string | null;
+  favoriteCharacter?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  book: Book;
   child?: Pick<Child, 'id' | 'name' | 'avatar'>;
 }
 
@@ -247,31 +262,65 @@ export interface CreateChildInput {
   birthYear?: number;
 }
 
-export interface CreateBookInput {
-  childId: string;
+// Metadata for a brand-new book (when not adding from the library).
+export interface NewBookInput {
   title: string;
-  author: string;
+  author?: string;
   isbn?: string;
   genre: Genre;
   totalPages?: number;
-  status?: 'to-read' | 'reading' | 'finished';
+}
+
+// Per-child reading state shared by create/update payloads.
+export interface ChildBookStateInput {
+  status?: BookStatus;
   currentPage?: number;
   startDate?: string;
   finishDate?: string;
   rating?: number;
   notes?: string;
   favoriteCharacter?: string;
-  dateRead?: string;
+}
+
+// Create a child_book: either link an existing `bookId` (from the library)
+// OR provide inline `book` metadata (new book). Exactly one of the two.
+export type CreateChildBookInput = ChildBookStateInput & {
+  childId: string;
+} & (
+  | { bookId: string; book?: never }
+  | { bookId?: never; book: NewBookInput }
+);
+
+// Update only the per-child reading state (nullable to allow clearing).
+export interface UpdateChildBookInput {
+  status?: BookStatus;
+  currentPage?: number;
+  startDate?: string;
+  finishDate?: string;
+  rating?: number | null;
+  notes?: string | null;
+  favoriteCharacter?: string | null;
+}
+
+// Update shared book metadata (affects all children sharing the book).
+export interface UpdateBookInput {
+  title?: string;
+  author?: string;
+  isbn?: string | null;
+  genre?: Genre;
+  totalPages?: number | null;
 }
 
 export interface CreateReadingSessionInput {
-  childId: string;
-  bookId: string;
+  childBookId: string;
   minutes: number;
   pageEnd?: number;
   mood?: number;
   finishedBook?: boolean;
   date?: string;
+  rating?: number;
+  favoriteCharacter?: string;
+  notes?: string;
 }
 
 // ============================================================================

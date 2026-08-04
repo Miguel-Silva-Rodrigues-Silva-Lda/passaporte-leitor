@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
-import { booksApi, childrenApi, type ChildListItem } from '../lib/api';
+import { booksApi, childBooksApi, childrenApi, type ChildListItem } from '../lib/api';
 import { useFamilyId } from '../lib/store';
-import type { Book } from '../lib/types';
+import type { ChildBook } from '../lib/types';
 import { GENRES, BOOK_STATUS_CONFIG } from '../lib/types';
 import { Modal } from '../components/ui';
 import { ChildSelector } from '../components/ChildSelector';
@@ -53,14 +53,14 @@ interface SortDropdownProps {
 }
 
 interface CompactBookCardProps {
-  book: Book;
+  childBook: ChildBook;
   onClick: () => void;
   showChild: boolean;
   children?: ChildListItem[];
 }
 
 interface BookDetailModalProps {
-  book: Book | null;
+  childBook: ChildBook | null;
   isOpen: boolean;
   onClose: () => void;
 }
@@ -203,13 +203,14 @@ const SortDropdown = ({ value, onChange }: SortDropdownProps) => {
 // COMPACT BOOK CARD
 // ============================================================================
 
-const CompactBookCard = ({ book, onClick, showChild, children }: CompactBookCardProps) => {
+const CompactBookCard = ({ childBook, onClick, showChild, children }: CompactBookCardProps) => {
+  const { book } = childBook;
   const genre = GENRES[book.genre as keyof typeof GENRES];
-  const progress = book.totalPages && book.currentPage
-    ? Math.round((book.currentPage / book.totalPages) * 100)
+  const progress = book.totalPages && childBook.currentPage
+    ? Math.round((childBook.currentPage / book.totalPages) * 100)
     : null;
 
-  const bookChild = showChild ? children?.find(c => c.id === book.childId) : null;
+  const bookChild = showChild ? children?.find(c => c.id === childBook.childId) : null;
 
   return (
     <div
@@ -225,7 +226,7 @@ const CompactBookCard = ({ book, onClick, showChild, children }: CompactBookCard
           {genre?.icon}
         </div>
 
-        {book.status === 'reading' && progress !== null && (
+        {childBook.status === 'reading' && progress !== null && (
           <span
             className="text-xs font-bold px-1 py-0.5 rounded-full"
             style={{ backgroundColor: `${genre?.color}15`, color: genre?.color }}
@@ -233,10 +234,10 @@ const CompactBookCard = ({ book, onClick, showChild, children }: CompactBookCard
             {progress}%
           </span>
         )}
-        {book.status === 'finished' && book.rating && (
-          <span className="text-xs">{'⭐'.repeat(book.rating)}</span>
+        {childBook.status === 'finished' && childBook.rating && (
+          <span className="text-xs">{'⭐'.repeat(childBook.rating)}</span>
         )}
-        {book.status === 'to-read' && book.totalPages && (
+        {childBook.status === 'to-read' && book.totalPages && (
           <span className="text-xs text-gray-400">{book.totalPages}p</span>
         )}
       </div>
@@ -257,7 +258,7 @@ const CompactBookCard = ({ book, onClick, showChild, children }: CompactBookCard
         </div>
       )}
 
-      {book.status === 'reading' && progress !== null && (
+      {childBook.status === 'reading' && progress !== null && (
         <div className="mt-1 h-1 bg-gray-100 rounded-full overflow-hidden">
           <div
             className="h-full rounded-full"
@@ -273,7 +274,7 @@ const CompactBookCard = ({ book, onClick, showChild, children }: CompactBookCard
 // BOOK DETAIL MODAL
 // ============================================================================
 
-const BookDetailModal = ({ book, isOpen, onClose }: BookDetailModalProps) => {
+const BookDetailModal = ({ childBook, isOpen, onClose }: BookDetailModalProps) => {
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -284,47 +285,66 @@ const BookDetailModal = ({ book, isOpen, onClose }: BookDetailModalProps) => {
   const [editGenre, setEditGenre] = useState<keyof typeof GENRES>('ADVENTURE');
   const [editStartDate, setEditStartDate] = useState('');
   const [editTotalPages, setEditTotalPages] = useState('');
-  const [errors, setErrors] = useState<any>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Sync state with book prop whenever it changes
+  // Sync state with childBook prop whenever it changes
   useEffect(() => {
-    if (book) {
-      setEditTitle(book.title || '');
-      setEditAuthor(book.author || '');
-      setEditGenre((book.genre as keyof typeof GENRES) || 'ADVENTURE');
-      setEditStartDate(book.startDate || '');
-      setEditTotalPages(book.totalPages?.toString() || '');
+    if (childBook) {
+      setEditTitle(childBook.book.title || '');
+      setEditAuthor(childBook.book.author || '');
+      setEditGenre((childBook.book.genre as keyof typeof GENRES) || 'ADVENTURE');
+      setEditStartDate(childBook.startDate || '');
+      setEditTotalPages(childBook.book.totalPages?.toString() || '');
       setErrors({});
       setIsEditing(false);
       setShowDeleteConfirm(false);
     }
-  }, [book]);
+  }, [childBook]);
 
-  // Update mutations
+  const invalidateBooks = () => {
+    queryClient.invalidateQueries({ queryKey: ['childBooks'] });
+    queryClient.invalidateQueries({ queryKey: ['library'] });
+    queryClient.invalidateQueries({ queryKey: ['children'] });
+    queryClient.invalidateQueries({ queryKey: ['familyStats'] });
+  };
+
+  // Saving splits shared metadata (books) from per-child state (child_books)
   const updateBookMutation = useMutation({
-    mutationFn: (data: any) => booksApi.update(book!.id, data),
+    mutationFn: async (data: {
+      title: string;
+      author: string;
+      genre: keyof typeof GENRES;
+      totalPages?: number;
+      startDate?: string;
+    }) => {
+      await booksApi.update(childBook!.book.id, {
+        title: data.title,
+        author: data.author,
+        genre: data.genre,
+        totalPages: data.totalPages ?? null,
+      });
+      await childBooksApi.update(childBook!.id, {
+        startDate: data.startDate,
+      });
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['books'] });
-      queryClient.invalidateQueries({ queryKey: ['childBooks'] });
-      queryClient.invalidateQueries({ queryKey: ['familyStats'] });
+      invalidateBooks();
       setIsEditing(false);
       onClose();
     },
   });
 
+  // Delete removes this child's copy (the shared book stays unless orphaned)
   const deleteBookMutation = useMutation({
-    mutationFn: () => booksApi.delete(book!.id),
+    mutationFn: () => childBooksApi.delete(childBook!.id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['books'] });
-      queryClient.invalidateQueries({ queryKey: ['childBooks'] });
-      queryClient.invalidateQueries({ queryKey: ['children'] });
-      queryClient.invalidateQueries({ queryKey: ['familyStats'] });
+      invalidateBooks();
       onClose();
     },
   });
 
   const handleSave = () => {
-    const newErrors: any = {};
+    const newErrors: Record<string, string> = {};
     if (!editTitle.trim()) newErrors.title = 'Título é obrigatório';
     if (!editAuthor.trim()) newErrors.author = 'Autor é obrigatório';
 
@@ -343,11 +363,11 @@ const BookDetailModal = ({ book, isOpen, onClose }: BookDetailModalProps) => {
   };
 
   const handleCancel = () => {
-    setEditTitle(book?.title || '');
-    setEditAuthor(book?.author || '');
-    setEditGenre((book?.genre as keyof typeof GENRES) || 'ADVENTURE');
-    setEditStartDate(book?.startDate || '');
-    setEditTotalPages(book?.totalPages?.toString() || '');
+    setEditTitle(childBook?.book.title || '');
+    setEditAuthor(childBook?.book.author || '');
+    setEditGenre((childBook?.book.genre as keyof typeof GENRES) || 'ADVENTURE');
+    setEditStartDate(childBook?.startDate || '');
+    setEditTotalPages(childBook?.book.totalPages?.toString() || '');
     setErrors({});
     setIsEditing(false);
   };
@@ -356,12 +376,13 @@ const BookDetailModal = ({ book, isOpen, onClose }: BookDetailModalProps) => {
     deleteBookMutation.mutate();
   };
 
-  if (!book) return null;
+  if (!childBook) return null;
 
+  const book = childBook.book;
   const genre = GENRES[book.genre as keyof typeof GENRES];
-  const status = STATUS_CONFIG[book.status];
-  const progress = book.totalPages && book.currentPage
-    ? Math.round((book.currentPage / book.totalPages) * 100)
+  const status = STATUS_CONFIG[childBook.status];
+  const progress = book.totalPages && childBook.currentPage
+    ? Math.round((childBook.currentPage / book.totalPages) * 100)
     : null;
 
   return (
@@ -434,7 +455,7 @@ const BookDetailModal = ({ book, isOpen, onClose }: BookDetailModalProps) => {
         </div>
       </div>
 
-      {book.status === 'reading' && !isEditing && (
+      {childBook.status === 'reading' && !isEditing && (
         <div className="bg-gray-50 rounded-xl p-4 mb-4">
           <p className="text-sm font-medium mb-2" style={{ color: COLORS.text }}>Progresso</p>
           {progress !== null ? (
@@ -449,11 +470,11 @@ const BookDetailModal = ({ book, isOpen, onClose }: BookDetailModalProps) => {
                 <span className="font-bold" style={{ color: genre?.color }}>{progress}%</span>
               </div>
               <p className="text-sm text-gray-500">
-                Página {book.currentPage} de {book.totalPages}
+                Página {childBook.currentPage} de {book.totalPages}
               </p>
             </>
           ) : (
-            <p className="text-sm text-gray-500">Página {book.currentPage || '?'}</p>
+            <p className="text-sm text-gray-500">Página {childBook.currentPage || '?'}</p>
           )}
         </div>
       )}
@@ -483,19 +504,19 @@ const BookDetailModal = ({ book, isOpen, onClose }: BookDetailModalProps) => {
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-4 text-sm">
-            {book.startDate && (
+            {childBook.startDate && (
               <div>
                 <p className="text-gray-500">Início</p>
                 <p className="font-medium" style={{ color: COLORS.text }}>
-                  {new Date(book.startDate).toLocaleDateString('pt-PT', { day: 'numeric', month: 'long', year: 'numeric' })}
+                  {new Date(childBook.startDate).toLocaleDateString('pt-PT', { day: 'numeric', month: 'long', year: 'numeric' })}
                 </p>
               </div>
             )}
-            {book.finishDate && (
+            {childBook.finishDate && (
               <div>
                 <p className="text-gray-500">Fim</p>
                 <p className="font-medium" style={{ color: COLORS.text }}>
-                  {new Date(book.finishDate).toLocaleDateString('pt-PT', { day: 'numeric', month: 'long', year: 'numeric' })}
+                  {new Date(childBook.finishDate).toLocaleDateString('pt-PT', { day: 'numeric', month: 'long', year: 'numeric' })}
                 </p>
               </div>
             )}
@@ -509,29 +530,29 @@ const BookDetailModal = ({ book, isOpen, onClose }: BookDetailModalProps) => {
         )}
       </div>
 
-      {book.status === 'finished' && book.rating && !isEditing && (
+      {childBook.status === 'finished' && childBook.rating && !isEditing && (
         <div className="bg-green-50 rounded-xl p-4 mb-4">
           <p className="text-sm font-medium mb-2" style={{ color: COLORS.text }}>Avaliação</p>
 
           <div className="flex items-center gap-1 mb-3">
             {[...Array(5)].map((_, i) => (
               <span key={i} className="text-2xl">
-                {i < book.rating! ? '⭐' : '☆'}
+                {i < childBook.rating! ? '⭐' : '☆'}
               </span>
             ))}
           </div>
 
-          {book.favoriteCharacter && (
+          {childBook.favoriteCharacter && (
             <div className="mb-2">
               <p className="text-sm text-gray-500">Personagem favorita</p>
-              <p className="font-medium" style={{ color: COLORS.text }}>{book.favoriteCharacter}</p>
+              <p className="font-medium" style={{ color: COLORS.text }}>{childBook.favoriteCharacter}</p>
             </div>
           )}
 
-          {book.notes && (
+          {childBook.notes && (
             <div className="mb-2">
               <p className="text-sm text-gray-500">O que achei</p>
-              <p className="text-sm" style={{ color: COLORS.text }}>"{book.notes}"</p>
+              <p className="text-sm" style={{ color: COLORS.text }}>"{childBook.notes}"</p>
             </div>
           )}
 
@@ -723,7 +744,7 @@ export default function BooksPage() {
   const [genreFilter, setGenreFilter] = useState<GenreFilter>('all');
   const [sortBy, setSortBy] = useState<SortBy>('recent');
   const [search, setSearch] = useState('');
-  const [selectedBook, setSelectedBook] = useState<Book | null>(null);
+  const [selectedBook, setSelectedBook] = useState<ChildBook | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
 
   // Reset page when filters change
@@ -738,8 +759,8 @@ export default function BooksPage() {
   });
 
   const { data: booksData } = useQuery({
-    queryKey: ['books', familyId, selectedChildId, statusFilter, genreFilter, search, sortBy, currentPage],
-    queryFn: () => booksApi.getByFamily(familyId!, {
+    queryKey: ['childBooks', familyId, selectedChildId, statusFilter, genreFilter, search, sortBy, currentPage],
+    queryFn: () => childBooksApi.getByFamily(familyId!, {
       status: statusFilter !== 'all' ? statusFilter : undefined,
       genre: genreFilter !== 'all' ? genreFilter : undefined,
       childId: selectedChildId !== 'all' ? selectedChildId : undefined,
@@ -751,7 +772,7 @@ export default function BooksPage() {
     enabled: !!familyId,
   });
 
-  const books = booksData?.books ?? [];
+  const books = booksData?.childBooks ?? [];
   const apiCounts = booksData?.counts ?? { reading: 0, 'to-read': 0, finished: 0 };
   const totalBooks = apiCounts.reading + apiCounts['to-read'] + apiCounts.finished;
 
@@ -822,11 +843,11 @@ export default function BooksPage() {
         ) : (
           <>
             <div className="grid grid-cols-2 gap-2">
-              {books.map((book) => (
+              {books.map((childBook) => (
                 <CompactBookCard
-                  key={book.id}
-                  book={book}
-                  onClick={() => setSelectedBook(book)}
+                  key={childBook.id}
+                  childBook={childBook}
+                  onClick={() => setSelectedBook(childBook)}
                   showChild={selectedChildId === 'all'}
                   children={children}
                 />
@@ -842,7 +863,7 @@ export default function BooksPage() {
       </div>
 
       <BookDetailModal
-        book={selectedBook}
+        childBook={selectedBook}
         isOpen={!!selectedBook}
         onClose={() => setSelectedBook(null)}
       />

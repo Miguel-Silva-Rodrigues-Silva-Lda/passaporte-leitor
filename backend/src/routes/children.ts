@@ -4,7 +4,7 @@ import { BookStatus } from '@prisma/client';
 import prisma from '../lib/prisma.js';
 import { getCurrentLevel, getNextLevel, getLevelProgress, getBooksToNextLevel } from '../lib/levels-config.js';
 import { verifyFamilyParam, verifyChildOwnership } from '../middleware/authorization.js';
-import { serializeBooks } from '../lib/serializers.js';
+import { serializeChildBooks } from '../lib/serializers.js';
 
 export const childRoutes = new Hono();
 
@@ -40,8 +40,9 @@ childRoutes.get('/:id', async (c) => {
   const child = await prisma.child.findUnique({
     where: { id },
     include: {
-      books: {
+      childBooks: {
         orderBy: { updatedAt: 'desc' },
+        include: { book: true },
       },
       achievements: {
         include: {
@@ -49,7 +50,7 @@ childRoutes.get('/:id', async (c) => {
         },
       },
       _count: {
-        select: { books: true },
+        select: { childBooks: true },
       },
     },
   });
@@ -58,10 +59,10 @@ childRoutes.get('/:id', async (c) => {
     return c.json({ error: 'Criança não encontrada' }, 404);
   }
 
-  // Serialize book status to lowercase
+  // Serialize per-child book status (metadata stays nested under .book)
   const serializedChild = {
     ...child,
-    books: serializeBooks(child.books)
+    childBooks: serializeChildBooks(child.childBooks)
   };
 
   return c.json(serializedChild);
@@ -86,16 +87,17 @@ childRoutes.get('/family/:familyId', async (c) => {
     where: { familyId },
     include: {
       _count: {
-        select: { books: true },
+        select: { childBooks: true },
       },
-      books: {
+      childBooks: {
         where: {
           OR: [
             { status: BookStatus.READING },
             { status: BookStatus.FINISHED }
           ]
         },
-        orderBy: { updatedAt: 'desc' }
+        orderBy: { updatedAt: 'desc' },
+        include: { book: true }
       },
       readingSessions: {
         where: {
@@ -110,10 +112,10 @@ childRoutes.get('/family/:familyId', async (c) => {
     orderBy: { createdAt: 'asc' },
   });
 
-  // Serialize book status to lowercase for all children
+  // Serialize per-child book status for all children (metadata under .book)
   const serializedChildren = children.map(child => ({
     ...child,
-    books: serializeBooks(child.books)
+    childBooks: serializeChildBooks(child.childBooks)
   }));
 
   // Transform data for dashboard
@@ -121,7 +123,7 @@ childRoutes.get('/family/:familyId', async (c) => {
     // 1. Calculate Level using levels-config
 
     const levelCategory = child.levelCategory || 'EXPLORERS'; // Default to EXPLORERS
-    const finishedBooksCount = child.books.filter((b: any) => b.status === 'finished').length;
+    const finishedBooksCount = child.childBooks.filter((b: any) => b.status === 'finished').length;
 
     const currentLevel = getCurrentLevel(finishedBooksCount, levelCategory);
     const nextLevel = getNextLevel(finishedBooksCount, levelCategory);
@@ -189,22 +191,22 @@ childRoutes.get('/family/:familyId', async (c) => {
       };
     });
 
-    // 4. Current Books
-    const currentBooks = child.books.filter((b: any) => b.status === 'reading').map((b: any) => ({
+    // 4. Current Books (metadata under b.book, reading state on b)
+    const currentBooks = child.childBooks.filter((b: any) => b.status === 'reading').map((b: any) => ({
       id: b.id,
-      title: b.title,
-      author: b.author,
-      genre: b.genre,
-      progress: b.totalPages && b.currentPage ? Math.round((b.currentPage / b.totalPages) * 100) : undefined,
-      totalPages: b.totalPages,
+      title: b.book.title,
+      author: b.book.author,
+      genre: b.book.genre,
+      progress: b.book.totalPages && b.currentPage ? Math.round((b.currentPage / b.book.totalPages) * 100) : undefined,
+      totalPages: b.book.totalPages,
       currentPage: b.currentPage,
       startDate: b.startDate,
       daysReading: b.startDate ? Math.ceil((new Date().getTime() - new Date(b.startDate).getTime()) / (1000 * 3600 * 24)) : 0,
-      type: b.totalPages && b.currentPage ? 'page-progress' : b.currentPage ? 'page-only' : 'time-only'
+      type: b.book.totalPages && b.currentPage ? 'page-progress' : b.currentPage ? 'page-only' : 'time-only'
     }));
 
     // 5. Last Finished
-    const lastFinishedBook = child.books.find((b: any) => b.status === 'finished');
+    const lastFinishedBook = child.childBooks.find((b: any) => b.status === 'finished');
 
     return {
       ...child,
@@ -225,9 +227,9 @@ childRoutes.get('/family/:familyId', async (c) => {
       weeklyActivity: weekSessions, // Mapped to expected format
       currentBooks,
       lastFinishedBook: lastFinishedBook ? {
-        title: lastFinishedBook.title,
-        author: lastFinishedBook.author,
-        genre: lastFinishedBook.genre,
+        title: lastFinishedBook.book.title,
+        author: lastFinishedBook.book.author,
+        genre: lastFinishedBook.book.genre,
         rating: lastFinishedBook.rating || 0,
         finishedAt: lastFinishedBook.finishDate || lastFinishedBook.updatedAt
       } : null
@@ -299,7 +301,7 @@ childRoutes.post('/', async (c) => {
     },
     include: {
       _count: {
-        select: { books: true },
+        select: { childBooks: true },
       },
     },
   });
@@ -331,7 +333,7 @@ childRoutes.put('/:id', async (c) => {
     data: validation.data,
     include: {
       _count: {
-        select: { books: true },
+        select: { childBooks: true },
       },
     },
   });
