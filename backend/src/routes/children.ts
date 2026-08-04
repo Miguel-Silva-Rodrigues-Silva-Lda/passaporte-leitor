@@ -92,6 +92,7 @@ childRoutes.get('/family/:familyId', async (c) => {
       childBooks: {
         where: {
           OR: [
+            { status: BookStatus.TO_READ },
             { status: BookStatus.READING },
             { status: BookStatus.FINISHED }
           ]
@@ -191,8 +192,8 @@ childRoutes.get('/family/:familyId', async (c) => {
       };
     });
 
-    // 4. Current Books (metadata under b.book, reading state on b)
-    const currentBooks = child.childBooks.filter((b: any) => b.status === 'reading').map((b: any) => ({
+    // 4. Current Books — "a ler" e "quero ler" (para permitir registar leitura)
+    const currentBooks = child.childBooks.filter((b: any) => b.status === 'reading' || b.status === 'to-read').map((b: any) => ({
       id: b.id,
       title: b.book.title,
       author: b.book.author,

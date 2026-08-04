@@ -85,12 +85,22 @@ readingLogRoutes.post('/', async (c) => {
                 notes: notes || undefined,
             }
         });
-    } else if (pageEnd && childBook.status === BookStatus.READING) {
-        // Update current page if the book is being read
-        await prisma.childBook.update({
-            where: { id: childBookId },
-            data: { currentPage: pageEnd }
-        });
+    } else if (!finishedBook) {
+        // Logging progress: a "quero ler" book starts being read; keep page in sync
+        const updateData: any = {};
+        if (childBook.status === BookStatus.TO_READ) {
+            updateData.status = BookStatus.READING;
+            if (!childBook.startDate) {
+                updateData.startDate = date ? new Date(date) : new Date();
+            }
+        }
+        if (pageEnd) updateData.currentPage = pageEnd;
+        if (Object.keys(updateData).length > 0) {
+            await prisma.childBook.update({
+                where: { id: childBookId },
+                data: updateData,
+            });
+        }
     }
 
     // Verificar conquistas (streaks, minutos, sessões, livros terminados)
