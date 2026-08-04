@@ -145,8 +145,20 @@ const Step2ReadingStatus = ({ data, onChange, onNext, onBack }: any) => {
             {/* Section Header */}
             <h2 className="text-lg font-bold text-gray-800 mb-4">📖 Estado do Livro</h2>
 
-            {/* Status selection - Only 2 buttons */}
-            <div className="grid grid-cols-2 gap-3 mb-6">
+            {/* Status selection */}
+            <div className="grid grid-cols-3 gap-3 mb-6">
+                <button
+                    onClick={() => onChange({ ...data, status: 'to-read', startDate: undefined, currentPage: undefined, finishDate: undefined })}
+                    type="button"
+                    className={`p-4 rounded-xl text-center transition-all ${data.status === 'to-read'
+                        ? 'bg-blue-100 ring-2 ring-blue-500'
+                        : 'bg-gray-100 hover:bg-gray-200'
+                        }`}
+                >
+                    <span className="text-3xl block mb-2">📋</span>
+                    <span className="font-bold text-gray-800">Quero Ler</span>
+                </button>
+
                 <button
                     onClick={() => onChange({ ...data, status: 'reading', finishDate: undefined })}
                     type="button"
@@ -172,8 +184,8 @@ const Step2ReadingStatus = ({ data, onChange, onNext, onBack }: any) => {
                 </button>
             </div>
 
-            {/* Conditional fields */}
-            {data.status && (
+            {/* Conditional fields — "Quero Ler" (to-read) has no extra data */}
+            {(data.status === 'reading' || data.status === 'finished') && (
                 <div className="bg-gray-50 rounded-xl p-4">
                     <div className="mb-2.5">
                         <label className="flex items-center gap-1 text-sm font-medium mb-2" style={{ color: COLORS.text }}>
@@ -604,15 +616,18 @@ export function AddBookModal({ isOpen, onClose, child, onSuccess }: AddBookModal
 
     // Build the create payload: either link a library book (bookId) or a new book.
     const buildCreatePayload = (): CreateChildBookInput => {
-        const state = {
-            status: bookData.status,
-            currentPage: bookData.currentPage,
-            startDate: bookData.startDate ? new Date(bookData.startDate).toISOString() : undefined,
-            finishDate: bookData.finishDate ? new Date(bookData.finishDate).toISOString() : undefined,
-            rating: bookData.rating,
-            notes: bookData.notes,
-            favoriteCharacter: bookData.favoriteCharacter,
-        };
+        // "Quero Ler" (to-read) carries no reading data — only the status.
+        const state = bookData.status === 'to-read'
+            ? { status: 'to-read' as const }
+            : {
+                status: bookData.status,
+                currentPage: bookData.currentPage,
+                startDate: bookData.startDate ? new Date(bookData.startDate).toISOString() : undefined,
+                finishDate: bookData.finishDate ? new Date(bookData.finishDate).toISOString() : undefined,
+                rating: bookData.rating,
+                notes: bookData.notes,
+                favoriteCharacter: bookData.favoriteCharacter,
+            };
         if (bookData.bookId) {
             return { childId: child!.id, bookId: bookData.bookId, ...state };
         }
