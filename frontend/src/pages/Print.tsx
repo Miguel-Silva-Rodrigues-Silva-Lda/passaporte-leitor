@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useSelectedChild, useChildren, useStore } from '../lib/store';
-import { statsApi, booksApi } from '../lib/api';
+import { statsApi, childBooksApi } from '../lib/api';
 import { Card, Button, Modal } from '../components/ui';
-import { GENRES } from '../lib/types';
+import { GENRES, type ChildBook } from '../lib/types';
 
 export default function PrintPage() {
   const children = useChildren();
@@ -22,12 +22,12 @@ export default function PrintPage() {
 
   const { data: booksData } = useQuery({
     queryKey: ['childBooks', child?.id],
-    queryFn: () => booksApi.getByChild(child!.id),
+    queryFn: () => childBooksApi.getByChild(child!.id),
     enabled: !!child,
   });
 
   // Only show finished books in the passport
-  const books = (booksData?.books || []).filter((book: any) => book.status === 'finished');
+  const books: ChildBook[] = (booksData?.childBooks || []).filter((cb) => cb.status === 'finished');
 
   const printItems = [
     {
@@ -239,7 +239,7 @@ function PassportModal({
         <div className="grid grid-cols-3 gap-3">
           {Array.from({ length: 6 }).map((_, i) => {
             const book = books[i];
-            const genre = book ? GENRES[book.genre as keyof typeof GENRES] : null;
+            const genre = book ? GENRES[book.book.genre as keyof typeof GENRES] : null;
 
             return (
               <div
@@ -254,7 +254,7 @@ function PassportModal({
                   <>
                     <span className="text-2xl mb-1">{genre?.icon}</span>
                     <p className="text-xs font-bold text-center line-clamp-2 text-gray-800">
-                      {book.title}
+                      {book.book.title}
                     </p>
                     {book.finishDate && (
                       <p className="text-xs text-gray-500 mt-1">
